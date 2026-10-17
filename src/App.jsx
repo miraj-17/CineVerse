@@ -4,34 +4,73 @@ import { motion, useReducedMotion } from 'framer-motion'
 import {
   Search, ArrowUpRight, Play, Sparkles, Clapperboard,
   Star, X, ChevronLeft, ChevronRight, Film, Compass,
-  Tv, CalendarDays, Layers, LoaderCircle
+  Tv, CalendarDays, Layers, LoaderCircle, WandSparkles
 } from 'lucide-react'
 import './App.css'
 
 const API_URL = '/api/movies'
 const IMAGE_BASE = 'https://image.tmdb.org/t/p/'
 
+const MEDIA = {
+  movie: {
+    label: 'Movies',
+    singular: 'Movie',
+    icon: Film,
+    genres: 'genres',
+    trending: 'trending',
+    popular: 'popular',
+    search: 'search',
+    details: 'details'
+  },
+  tv: {
+    label: 'TV Series',
+    singular: 'TV Series',
+    icon: Tv,
+    genres: 'genres-tv',
+    trending: 'trending-tv',
+    popular: 'popular-tv',
+    search: 'search-tv',
+    details: 'details-tv'
+  },
+  anime: {
+    label: 'Anime',
+    singular: 'Anime',
+    icon: WandSparkles,
+    genres: 'genres-anime',
+    trending: 'trending-anime',
+    popular: 'popular-anime',
+    search: 'search-anime',
+    details: 'details-anime'
+  }
+}
+
 const reveal = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 }
 }
 
 function posterUrl(path, size = 'w500') {
-  return path ? `${IMAGE_BASE}${size}${path.startsWith('/') ? path : `/${path}`}` : ''
+  if (!path) return ''
+  return `${IMAGE_BASE}${size}${path.startsWith('/') ? path : `/${path}`}`
 }
 
 function formatMedia(item, genreMap = {}, mediaType = 'movie') {
-  const isTV = mediaType === 'tv'
   const genreNames = item.genres?.map(g => g.name)
     || (item.genre_ids || []).map(id => genreMap[id]).filter(Boolean)
 
   return {
     id: item.id,
     mediaType,
-    title: item.title || item.name || item.original_title || item.original_name || 'Untitled',
-    year: (item.release_date || item.first_air_date || '').slice(0, 4) || 'N/A',
+    title: item.title || item.name || item.original_title
+      || item.original_name || 'Untitled',
+    year: (item.release_date || item.first_air_date || '')
+      .slice(0, 4) || 'N/A',
     rating: Number(item.vote_average || 0).toFixed(1),
-    genre: genreNames[0] || (isTV ? 'TV Series' : 'Movie'),
+    genre: genreNames[0] || (
+      mediaType === 'tv' ? 'TV Series'
+        : mediaType === 'anime' ? 'Anime'
+          : 'Movie'
+    ),
     genres: genreNames,
     image: item.poster_path || '',
     backdrop: item.backdrop_path || '',
@@ -50,7 +89,7 @@ function Reveal({ children, className = '', delay = 0 }) {
       initial={reducedMotion ? false : 'hidden'}
       whileInView="visible"
       viewport={{ once: true, amount: 0.08 }}
-      transition={{ duration: reducedMotion ? 0 : 0.55, delay }}
+      transition={{ duration: reducedMotion ? 0 : 0.45, delay }}
     >
       {children}
     </motion.div>
@@ -59,7 +98,7 @@ function Reveal({ children, className = '', delay = 0 }) {
 
 function MediaCard({ item, onSelect }) {
   const [imageFailed, setImageFailed] = useState(false)
-  const isTV = item.mediaType === 'tv'
+  const Icon = MEDIA[item.mediaType]?.icon || Film
 
   return (
     <Reveal className="movie-card">
@@ -78,13 +117,17 @@ function MediaCard({ item, onSelect }) {
           />
         ) : (
           <div className="poster-fallback">
-            {isTV ? <Tv size={42} /> : <Film size={42} />}
+            <Icon size={42} />
             <span>{item.title}</span>
           </div>
         )}
 
         <span className="media-type-badge">
-          {isTV ? 'TV SERIES' : 'MOVIE'}
+          {item.mediaType === 'tv'
+            ? 'TV SERIES'
+            : item.mediaType === 'anime'
+              ? 'ANIME'
+              : 'MOVIE'}
         </span>
 
         <span className="rating">
@@ -105,6 +148,7 @@ function MediaCard({ item, onSelect }) {
         >
           {item.title}
         </button>
+
         <div className="movie-sub">
           <span>{item.year}</span>
           <span>{item.genre}</span>
@@ -121,14 +165,17 @@ export default function App() {
   const [selectedMedia, setSelectedMedia] = useState(null)
   const [trailerOpen, setTrailerOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+
   const [items, setItems] = useState([])
   const [genres, setGenres] = useState([])
   const [genreMap, setGenreMap] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [catalogType, setCatalogType] = useState('trending')
+
   const [detailsLoading, setDetailsLoading] = useState(false)
   const [selectedSeasonNumber, setSelectedSeasonNumber] = useState(1)
   const [seasonDetails, setSeasonDetails] = useState(null)
@@ -136,22 +183,27 @@ export default function App() {
 
   const requestRef = useRef(0)
   const genreRequestRef = useRef(0)
+  const detailsRequestRef = useRef(0)
 
   const isTV = mediaMode === 'tv'
-  const mediaLabel = isTV ? 'TV Series' : 'Movies'
+  const isAnime = mediaMode === 'anime'
+  const isEpisodic = isTV || isAnime
+  const mediaLabel = MEDIA[mediaMode].label
 
-  const requestJSON = async (params, signal) => {
+  async function requestJSON(params, signal) {
     const query = new URLSearchParams(params)
     const response = await fetch(`${API_URL}?${query}`, { signal })
 
+    const data = await response.json().catch(() => ({}))
+
     if (!response.ok) {
-      throw new Error(`Request failed (${response.status})`)
+      throw new Error(data.error || `Request failed (${response.status})`)
     }
 
-    return response.json()
+    return data
   }
 
-  // Load the correct genre list when switching between movies and TV.
+  // Load the genre list for the selected category.
   useEffect(() => {
     const controller = new AbortController()
     const requestId = ++genreRequestRef.current
@@ -162,7 +214,7 @@ export default function App() {
 
       try {
         const data = await requestJSON({
-          type: mediaMode === 'tv' ? 'genres-tv' : 'genres'
+          type: MEDIA[mediaMode].genres
         }, controller.signal)
 
         if (requestId !== genreRequestRef.current) return
@@ -187,50 +239,47 @@ export default function App() {
     return () => controller.abort()
   }, [mediaMode])
 
-  // Search and catalog requests use different endpoints for movies and TV.
+  // Load search results, trending titles or popular titles.
   useEffect(() => {
     const controller = new AbortController()
     const requestId = ++requestRef.current
-    let delayTimer
+    let timer
 
     async function loadCatalog() {
       setLoading(true)
       setError('')
 
       try {
-        let params
+        let type
 
         if (search.trim()) {
-          params = {
-            type: isTV ? 'search-tv' : 'search',
-            query: search.trim(),
-            page: String(page)
-          }
+          type = MEDIA[mediaMode].search
+        } else if (catalogType === 'popular') {
+          type = MEDIA[mediaMode].popular
         } else {
-          let type
-
-          if (catalogType === 'popular') {
-            type = isTV ? 'popular-tv' : 'popular'
-          } else {
-            type = isTV ? 'trending-tv' : 'trending'
-          }
-
-          params = { type, page: String(page) }
+          type = MEDIA[mediaMode].trending
         }
+
+        const params = { type, page: String(page) }
+
+        if (search.trim()) params.query = search.trim()
 
         const data = await requestJSON(params, controller.signal)
 
         if (requestId !== requestRef.current) return
 
-        const results = (data.results || []).map(item =>
+        setItems((data.results || []).map(item =>
           formatMedia(item, genreMap, mediaMode)
-        )
+        ))
 
-        setItems(results)
         setTotalPages(Math.min(Number(data.total_pages || 1), 500))
       } catch (err) {
         if (err.name !== 'AbortError' && requestId === requestRef.current) {
-          setError('Could not load titles. Please check your connection and try again.')
+          setError(
+            mediaMode === 'anime'
+              ? 'Could not load anime. Check your Anime API routes and connection.'
+              : 'Could not load titles. Check your connection and try again.'
+          )
           setItems([])
         }
       } finally {
@@ -238,25 +287,27 @@ export default function App() {
       }
     }
 
-    delayTimer = setTimeout(loadCatalog, search.trim() ? 350 : 0)
+    timer = setTimeout(loadCatalog, search.trim() ? 350 : 0)
 
     return () => {
-      clearTimeout(delayTimer)
+      clearTimeout(timer)
       controller.abort()
     }
-  }, [search, page, catalogType, mediaMode, genreMap, isTV])
+  }, [search, page, catalogType, mediaMode, genreMap])
 
-  // Fetch a selected show's seasons and episodes.
+  // Fetch seasons and episodes for TV series or anime.
   useEffect(() => {
-    if (!selectedMedia || selectedMedia.mediaType !== 'tv') {
+    if (!selectedMedia || !['tv', 'anime'].includes(selectedMedia.mediaType)) {
       setSeasonDetails(null)
+      setSeasonLoading(false)
       return
     }
 
     const seasons = selectedMedia.original?.seasons || []
-    const availableSeasons = seasons.filter(season => season.season_number > 0)
+    const available = seasons.filter(s => s.season_number > 0)
 
-    if (!availableSeasons.some(s => s.season_number === selectedSeasonNumber)) {
+    if (!available.some(s => s.season_number === selectedSeasonNumber)) {
+      setSeasonDetails(null)
       return
     }
 
@@ -275,9 +326,7 @@ export default function App() {
 
         setSeasonDetails(data)
       } catch (err) {
-        if (err.name !== 'AbortError') {
-          setSeasonDetails(null)
-        }
+        if (err.name !== 'AbortError') setSeasonDetails(null)
       } finally {
         if (!controller.signal.aborted) setSeasonLoading(false)
       }
@@ -344,85 +393,125 @@ export default function App() {
     setSelectedGenre('All')
     setMenuOpen(false)
     setSelectedMedia(null)
+    setTrailerOpen(false)
   }
 
   async function openMedia(item) {
-    setSelectedMedia({
-      ...item,
-      original: item.original || {}
-    })
+    const requestId = ++detailsRequestRef.current
+
+    setSelectedMedia({ ...item })
     setDetailsLoading(true)
     setTrailerOpen(false)
     setSeasonDetails(null)
     setSelectedSeasonNumber(1)
 
     try {
+      const detailType = MEDIA[item.mediaType].details
       const data = await requestJSON({
-        type: item.mediaType === 'tv' ? 'details-tv' : 'details',
+        type: detailType,
         id: String(item.id)
       })
 
+      if (requestId !== detailsRequestRef.current) return
+
+      const detailItem = formatMedia(data, genreMap, item.mediaType)
+
       setSelectedMedia(current => {
-        if (!current || current.id !== item.id || current.mediaType !== item.mediaType) {
+        if (
+          !current ||
+          current.id !== item.id ||
+          current.mediaType !== item.mediaType
+        ) {
           return current
         }
 
-        return formatMedia(data, genreMap, item.mediaType)
+        return detailItem
       })
 
-      const seasons = data.seasons || []
-      const firstSeason = seasons.find(season => season.season_number > 0)
-      if (firstSeason) setSelectedSeasonNumber(firstSeason.season_number)
+      const firstSeason = (data.seasons || [])
+        .find(season => season.season_number > 0)
+
+      if (firstSeason) {
+        setSelectedSeasonNumber(firstSeason.season_number)
+      }
     } catch (err) {
-      console.error('Could not load details:', err)
+      if (requestId === detailsRequestRef.current) {
+        console.error('Could not load details:', err)
+      }
     } finally {
-      setDetailsLoading(false)
+      if (requestId === detailsRequestRef.current) {
+        setDetailsLoading(false)
+      }
     }
+  }
+
+  function closeMedia() {
+    ++detailsRequestRef.current
+    setSelectedMedia(null)
+    setTrailerOpen(false)
+    setSeasonDetails(null)
+    setDetailsLoading(false)
   }
 
   function openTrailer() {
     if (trailer?.key) {
       setTrailerOpen(true)
-    } else {
-      window.open(
-        `https://www.youtube.com/results?search_query=${encodeURIComponent(
-          `${selectedMedia?.title || ''} official trailer`
-        )}`,
-        '_blank',
-        'noopener,noreferrer'
-      )
+      return
     }
+
+    window.open(
+      `https://www.youtube.com/results?search_query=${encodeURIComponent(
+        `${selectedMedia?.title || ''} official trailer`
+      )}`,
+      '_blank',
+      'noopener,noreferrer'
+    )
   }
 
   const availableSeasons = (selectedMedia?.original?.seasons || [])
     .filter(season => season.season_number > 0)
+
+  const MediaIcon = MEDIA[mediaMode].icon
 
   return (
     <div className="app">
       <div className="ambient-glow" aria-hidden="true" />
 
       <header className="navbar">
-        <button className="logo" onClick={() => switchMedia('movie')} type="button">
-          <span className="logo-mark"><Clapperboard size={21} /></span>
+        <button
+          className="logo"
+          onClick={() => switchMedia('movie')}
+          type="button"
+          aria-label="CineVerse home"
+        >
+          <span className="logo-mark">
+            <Clapperboard size={21} />
+          </span>
           <span>CINE<span className="logo-accent">VERSE</span></span>
         </button>
 
         <nav className={`nav-links ${menuOpen ? 'open' : ''}`}>
+          {Object.entries(MEDIA).map(([key, media]) => {
+            const Icon = media.icon
+
+            return (
+              <button
+                key={key}
+                className={mediaMode === key && catalogType === 'trending' ? 'active' : ''}
+                onClick={() => switchMedia(key)}
+              >
+                <Icon size={15} /> {media.label}
+              </button>
+            )
+          })}
+
           <button
-            className={!isTV && catalogType === 'trending' ? 'active' : ''}
-            onClick={() => switchMedia('movie')}
+            className={catalogType === 'popular' ? 'active' : ''}
+            onClick={() => changeCatalog('popular')}
           >
-            <Film size={15} /> Movies
-          </button>
-          <button
-            className={isTV ? 'active' : ''}
-            onClick={() => switchMedia('tv')}
-          >
-            <Tv size={15} /> TV Series
-          </button>
-          <button onClick={() => changeCatalog('popular')}>
             <Star size={15} /> Popular
           </button>
+
           <a href="#categories" onClick={() => setMenuOpen(false)}>
             <Compass size={15} /> Discover
           </a>
@@ -452,8 +541,8 @@ export default function App() {
             </h1>
 
             <p>
-              Discover extraordinary movies and TV series, unforgettable
-              characters, and stories worth staying up for.
+              Discover extraordinary movies, unforgettable series and
+              incredible anime worlds. Find your next favorite story.
             </p>
 
             <div className="hero-actions">
@@ -466,16 +555,28 @@ export default function App() {
 
               <button
                 className="btn btn-secondary"
-                onClick={() => switchMedia(isTV ? 'movie' : 'tv')}
+                onClick={() => switchMedia(
+                  mediaMode === 'movie' ? 'anime'
+                    : mediaMode === 'anime' ? 'tv' : 'movie'
+                )}
               >
-                {isTV ? <Film size={17} /> : <Tv size={17} />}
-                {isTV ? 'Explore Movies' : 'Explore TV Series'}
+                {mediaMode === 'movie'
+                  ? <WandSparkles size={17} />
+                  : mediaMode === 'anime'
+                    ? <Tv size={17} />
+                    : <Film size={17} />}
+                {mediaMode === 'movie'
+                  ? 'Explore Anime'
+                  : mediaMode === 'anime'
+                    ? 'Explore TV Series'
+                    : 'Explore Movies'}
                 <ArrowUpRight size={16} />
               </button>
             </div>
 
             <div className="hero-note">
-              <span className="hero-dot" /> Discover your next favorite story
+              <span className="hero-dot" />
+              Movies · Series · Anime
             </div>
           </div>
 
@@ -483,7 +584,7 @@ export default function App() {
             <div className="hero-orbit orbit-one" />
             <div className="hero-orbit orbit-two" />
             <div className="hero-poster">
-              {isTV ? <Tv size={76} /> : <Clapperboard size={76} />}
+              <MediaIcon size={76} />
             </div>
             <span className="hero-star star-one">✦</span>
             <span className="hero-star star-two">✧</span>
@@ -493,7 +594,7 @@ export default function App() {
         <section className="stats-strip">
           <div><strong>Movies</strong><span>Blockbuster discoveries</span></div>
           <div><strong>TV Series</strong><span>Stories across seasons</span></div>
-          <div><strong>TMDB</strong><span>Powered by movie data</span></div>
+          <div><strong>Anime</strong><span>Worlds beyond imagination</span></div>
         </section>
 
         <section className="movie-section" id="trending">
@@ -502,6 +603,7 @@ export default function App() {
               <div className="eyebrow">
                 <Sparkles size={14} /> THE COLLECTION
               </div>
+
               <h2>
                 {search.trim()
                   ? `Search ${mediaLabel}`
@@ -509,6 +611,7 @@ export default function App() {
                     ? `Popular ${mediaLabel}`
                     : `Trending ${mediaLabel}`}
               </h2>
+
               <p>
                 {search.trim()
                   ? `Results for “${search.trim()}”`
@@ -517,24 +620,26 @@ export default function App() {
             </div>
 
             <div className="catalog-switch">
-              <button
-                className={!isTV ? 'active' : ''}
-                onClick={() => switchMedia('movie')}
-              >
-                <Film size={15} /> Movies
-              </button>
-              <button
-                className={isTV ? 'active' : ''}
-                onClick={() => switchMedia('tv')}
-              >
-                <Tv size={15} /> TV Series
-              </button>
+              {Object.entries(MEDIA).map(([key, media]) => {
+                const Icon = media.icon
+
+                return (
+                  <button
+                    key={key}
+                    className={mediaMode === key ? 'active' : ''}
+                    onClick={() => switchMedia(key)}
+                  >
+                    <Icon size={15} /> {media.label}
+                  </button>
+                )
+              })}
             </div>
           </div>
 
           <div className="search-panel">
             <label className="search-box">
               <Search size={19} />
+
               <input
                 type="search"
                 value={search}
@@ -542,13 +647,17 @@ export default function App() {
                   setSearch(event.target.value)
                   setPage(1)
                 }}
-                placeholder={`Search ${isTV ? 'TV series' : 'movies'}...`}
+                placeholder={`Search ${mediaLabel.toLowerCase()}...`}
                 aria-label={`Search ${mediaLabel}`}
               />
+
               {search && (
                 <button
                   type="button"
-                  onClick={() => setSearch('')}
+                  onClick={() => {
+                    setSearch('')
+                    setPage(1)
+                  }}
                   aria-label="Clear search"
                 >
                   <X size={17} />
@@ -579,7 +688,14 @@ export default function App() {
           {error && (
             <div className="empty-state">
               <p>{error}</p>
-              <button className="btn btn-primary" onClick={() => setPage(page)}>
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  setPage(current => current)
+                  setCatalogType(current => current)
+                  setError('')
+                }}
+              >
                 Try again
               </button>
             </div>
@@ -652,32 +768,47 @@ export default function App() {
           )}
 
           <p className="tmdb-note">
-            Movie and TV information provided by TMDB. CineVerse is not endorsed
-            or certified by TMDB.
+            Movie, TV and anime metadata provided by TMDB.
+            CineVerse is not endorsed or certified by TMDB.
           </p>
         </section>
 
         <section className="discovery-banner">
           <div>
-            <div className="eyebrow"><Sparkles size={14} /> KEEP EXPLORING</div>
+            <div className="eyebrow">
+              <Sparkles size={14} /> KEEP EXPLORING
+            </div>
             <h2>Every story starts somewhere.</h2>
-            <p>Switch between movies and series to find your next favorite.</p>
+            <p>Explore movies, TV series and anime in one place.</p>
           </div>
+
           <button
             className="btn btn-primary"
-            onClick={() => switchMedia(isTV ? 'movie' : 'tv')}
+            onClick={() => switchMedia(
+              mediaMode === 'movie' ? 'anime'
+                : mediaMode === 'anime' ? 'tv' : 'movie'
+            )}
           >
-            {isTV ? 'Explore Movies' : 'Explore TV Series'}
+            {mediaMode === 'movie'
+              ? 'Explore Anime'
+              : mediaMode === 'anime'
+                ? 'Explore TV Series'
+                : 'Explore Movies'}
             <ArrowUpRight size={17} />
           </button>
         </section>
       </main>
 
       <footer className="footer">
-        <button className="logo footer-logo" onClick={() => switchMedia('movie')}>
+        <button
+          className="logo footer-logo"
+          onClick={() => switchMedia('movie')}
+          type="button"
+        >
           <span className="logo-mark"><Clapperboard size={19} /></span>
           <span>CINE<span className="logo-accent">VERSE</span></span>
         </button>
+
         <p>Discover responsibly. Watch through authorized sources.</p>
         <span>© {new Date().getFullYear()} CineVerse</span>
       </footer>
@@ -686,20 +817,19 @@ export default function App() {
         <div
           className="movie-modal"
           onClick={event => {
-            if (event.target === event.currentTarget) {
-              setSelectedMedia(null)
-              setTrailerOpen(false)
-            }
+            if (event.target === event.currentTarget) closeMedia()
           }}
           role="presentation"
         >
-          <div className="modal-content" role="dialog" aria-modal="true" aria-label={`${selectedMedia.title} details`}>
+          <div
+            className="modal-content"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${selectedMedia.title} details`}
+          >
             <button
               className="modal-close"
-              onClick={() => {
-                setSelectedMedia(null)
-                setTrailerOpen(false)
-              }}
+              onClick={closeMedia}
               aria-label="Close details"
             >
               <X size={22} />
@@ -714,14 +844,26 @@ export default function App() {
               }}
             >
               <span className="media-type-badge">
-                {selectedMedia.mediaType === 'tv' ? 'TV SERIES' : 'MOVIE'}
+                {selectedMedia.mediaType === 'tv'
+                  ? 'TV SERIES'
+                  : selectedMedia.mediaType === 'anime'
+                    ? 'ANIME'
+                    : 'MOVIE'}
               </span>
             </div>
 
             <div className="modal-details">
               <div className="eyebrow">
-                {selectedMedia.mediaType === 'tv' ? <Tv size={15} /> : <Film size={15} />}
-                {selectedMedia.mediaType === 'tv' ? 'SERIES DETAILS' : 'MOVIE DETAILS'}
+                {selectedMedia.mediaType === 'anime'
+                  ? <WandSparkles size={15} />
+                  : selectedMedia.mediaType === 'tv'
+                    ? <Tv size={15} />
+                    : <Film size={15} />}
+                {selectedMedia.mediaType === 'anime'
+                  ? 'ANIME DETAILS'
+                  : selectedMedia.mediaType === 'tv'
+                    ? 'SERIES DETAILS'
+                    : 'MOVIE DETAILS'}
               </div>
 
               <h2>{selectedMedia.title}</h2>
@@ -729,17 +871,27 @@ export default function App() {
               <div className="modal-meta">
                 <span><Star size={15} fill="currentColor" /> {selectedMedia.rating}</span>
                 <span><CalendarDays size={15} /> {selectedMedia.year}</span>
-                {selectedMedia.genres.map(genre => <span key={genre}>{genre}</span>)}
-                {selectedMedia.mediaType === 'tv' && selectedMedia.original.number_of_seasons && (
-                  <span><Layers size={15} /> {selectedMedia.original.number_of_seasons} seasons</span>
+
+                {selectedMedia.genres.map(genre => (
+                  <span key={genre}>{genre}</span>
+                ))}
+
+                {isEpisodic && selectedMedia.original.number_of_seasons && (
+                  <span>
+                    <Layers size={15} />
+                    {selectedMedia.original.number_of_seasons} seasons
+                  </span>
                 )}
               </div>
 
-              <p className="modal-description">{selectedMedia.description}</p>
+              <p className="modal-description">
+                {selectedMedia.description}
+              </p>
 
               {detailsLoading && (
                 <div className="details-loading">
-                  <LoaderCircle className="loading-icon" size={20} /> Loading details...
+                  <LoaderCircle className="loading-icon" size={20} />
+                  Loading details...
                 </div>
               )}
 
@@ -747,6 +899,7 @@ export default function App() {
                 <button className="btn btn-primary" onClick={openTrailer}>
                   <Play size={17} fill="currentColor" /> Watch Trailer
                 </button>
+
                 {selectedMedia.original.homepage && (
                   <a
                     className="btn btn-secondary"
@@ -759,7 +912,7 @@ export default function App() {
                 )}
               </div>
 
-              {selectedMedia.mediaType === 'tv' && availableSeasons.length > 0 && (
+              {isEpisodic && availableSeasons.length > 0 && (
                 <section className="seasons-section">
                   <div className="season-heading">
                     <h3><Layers size={18} /> Seasons & Episodes</h3>
@@ -774,7 +927,9 @@ export default function App() {
                     id="seasonSelect"
                     className="season-select"
                     value={selectedSeasonNumber}
-                    onChange={event => setSelectedSeasonNumber(Number(event.target.value))}
+                    onChange={event =>
+                      setSelectedSeasonNumber(Number(event.target.value))
+                    }
                   >
                     {availableSeasons.map(season => (
                       <option key={season.id} value={season.season_number}>
@@ -785,7 +940,8 @@ export default function App() {
 
                   {seasonLoading && (
                     <div className="details-loading">
-                      <LoaderCircle className="loading-icon" size={20} /> Loading episodes...
+                      <LoaderCircle className="loading-icon" size={20} />
+                      Loading episodes...
                     </div>
                   )}
 
@@ -807,15 +963,25 @@ export default function App() {
 
                           <div className="episode-info">
                             <div className="episode-number">
-                              S{String(episode.season_number ?? selectedSeasonNumber).padStart(2, '0')}
+                              S{String(
+                                episode.season_number ?? selectedSeasonNumber
+                              ).padStart(2, '0')}
                               {' '}E{String(episode.episode_number).padStart(2, '0')}
                               {episode.air_date ? ` · ${episode.air_date}` : ''}
                             </div>
-                            <h4>{episode.name || `Episode ${episode.episode_number}`}</h4>
-                            <p>{episode.overview || 'Episode description is not available.'}</p>
+
+                            <h4>
+                              {episode.name || `Episode ${episode.episode_number}`}
+                            </h4>
+
+                            <p>
+                              {episode.overview || 'Episode description is not available.'}
+                            </p>
+
                             {episode.vote_average > 0 && (
                               <span className="episode-rating">
-                                <Star size={12} fill="currentColor" /> {Number(episode.vote_average).toFixed(1)}
+                                <Star size={12} fill="currentColor" />
+                                {Number(episode.vote_average).toFixed(1)}
                               </span>
                             )}
                           </div>
@@ -834,10 +1000,14 @@ export default function App() {
                 <div className="trailer-section">
                   <div className="trailer-heading">
                     <h3>Official trailer</h3>
-                    <button onClick={() => setTrailerOpen(false)} aria-label="Close trailer">
+                    <button
+                      onClick={() => setTrailerOpen(false)}
+                      aria-label="Close trailer"
+                    >
                       <X size={19} />
                     </button>
                   </div>
+
                   <div className="trailer-frame">
                     <iframe
                       src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(trailer.key)}`}
@@ -851,8 +1021,9 @@ export default function App() {
               )}
 
               <p className="modal-disclaimer">
-                CineVerse provides discovery information and trailers. Episode details
-                are informational and do not provide full-episode streaming.
+                CineVerse provides discovery information and trailers.
+                Episode details are informational and do not provide
+                full-episode streaming.
               </p>
             </div>
           </div>
