@@ -15,10 +15,7 @@ export async function onRequestGet({ request, env }) {
   const type = url.searchParams.get('type') || 'trending';
   const query = url.searchParams.get('query') || '';
   const id = url.searchParams.get('id');
-  const page = Math.max(
-    1,
-    Number(url.searchParams.get('page')) || 1
-  );
+  const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
 
   const params = new URLSearchParams({
     api_key: apiKey,
@@ -58,7 +55,7 @@ export async function onRequestGet({ request, env }) {
         );
       }
       path = `/movie/${id}`;
-      params.set('append_to_response', 'videos');
+      params.set('append_to_response', 'videos,credits');
       break;
 
     // TV SERIES
@@ -91,10 +88,47 @@ export async function onRequestGet({ request, env }) {
         );
       }
       path = `/tv/${id}`;
-      params.set('append_to_response', 'videos,credits,aggregate_credits');
+      params.set(
+        'append_to_response',
+        'videos,credits,aggregate_credits'
+      );
       break;
 
-    // TV SEASONS AND EPISODES
+    // ANIME MOVIES
+    case 'anime-movies':
+      path = '/discover/movie';
+      params.set('with_genres', '16');
+      params.set('with_original_language', 'ja');
+      params.set('sort_by', 'popularity.desc');
+      params.set('include_adult', 'false');
+      break;
+
+    case 'search-anime-movies':
+      if (!query.trim()) {
+        return Response.json({ results: [] });
+      }
+      path = '/search/movie';
+      params.set('query', query.trim());
+      params.set('include_adult', 'false');
+      break;
+
+    // ANIME SERIES
+    case 'anime-series':
+      path = '/discover/tv';
+      params.set('with_genres', '16');
+      params.set('with_original_language', 'ja');
+      params.set('sort_by', 'popularity.desc');
+      break;
+
+    case 'search-anime-series':
+      if (!query.trim()) {
+        return Response.json({ results: [] });
+      }
+      path = '/search/tv';
+      params.set('query', query.trim());
+      break;
+
+    // TV SEASONS
     case 'season': {
       const season = url.searchParams.get('season');
 
@@ -114,6 +148,7 @@ export async function onRequestGet({ request, env }) {
       break;
     }
 
+    // TV EPISODES
     case 'episode': {
       const season = url.searchParams.get('season');
       const episode = url.searchParams.get('episode');
@@ -127,7 +162,10 @@ export async function onRequestGet({ request, env }) {
         !/^\d+$/.test(episode)
       ) {
         return Response.json(
-          { error: 'A valid TV ID, season and episode are required.' },
+          {
+            error:
+              'A valid TV ID, season and episode are required.'
+          },
           { status: 400 }
         );
       }
@@ -154,6 +192,19 @@ export async function onRequestGet({ request, env }) {
       return Response.json(
         { error: data.status_message || 'TMDB request failed.' },
         { status: response.status }
+      );
+    }
+
+    // Filter anime search results to Japanese animation.
+    if (
+      type === 'search-anime-movies' ||
+      type === 'search-anime-series'
+    ) {
+      data.results = (data.results || []).filter(
+        item =>
+          item.original_language === 'ja' &&
+          Array.isArray(item.genre_ids) &&
+          item.genre_ids.includes(16)
       );
     }
 
