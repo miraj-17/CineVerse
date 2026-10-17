@@ -5,7 +5,7 @@ export async function onRequestGet({ request, env }) {
 
   if (!apiKey) {
     return Response.json(
-      { error: 'TMDB_API_KEY is not configured.' },
+      { error: '2ff5c3d55268db4ddbe7496493297403' },
       { status: 500 }
     );
   }
