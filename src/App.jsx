@@ -137,6 +137,7 @@ function App() {
   const [search, setSearch] = useState('')
   const [selectedGenre, setSelectedGenre] = useState('All')
   const [selectedMovie, setSelectedMovie] = useState(null)
+  const [trailerOpen, setTrailerOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
 
   const [movies, setMovies] = useState([])
@@ -302,17 +303,13 @@ function App() {
     (video) => video.site === 'YouTube' && video.type === 'Trailer'
   )
 
-  function openTrailer() {
-    if (selectedTrailer?.key) {
-      window.open(
-        `https://www.youtube.com/watch?v=${encodeURIComponent(selectedTrailer.key)}`,
-        '_blank',
-        'noopener,noreferrer'
-      )
-    } else {
-      window.alert('No trailer is available for this movie right now.')
-    }
+ function openTrailer() {
+  if (selectedTrailer?.key) {
+    setTrailerOpen(true)
+  } else {
+    window.alert('No trailer is available for this movie right now.')
   }
+}
 
   return (
     <div className="app">
@@ -739,6 +736,49 @@ function App() {
                 {selectedTrailer ? 'Watch Trailer' : 'Trailer Unavailable'}
                 <ArrowUpRight size={14} />
               </button>
+              {trailerOpen && selectedTrailer?.key && (
+  <div style={{ marginTop: 20 }}>
+    <div style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 10,
+      gap: 12
+    }}>
+      <h3>Now Playing: Trailer</h3>
+      <button
+        className="secondary-btn"
+        onClick={() => setTrailerOpen(false)}
+      >
+        Close Trailer ✕
+      </button>
+    </div>
+
+    <div style={{
+      position: 'relative',
+      width: '100%',
+      aspectRatio: '16 / 9',
+      background: '#000',
+      borderRadius: 12,
+      overflow: 'hidden'
+    }}>
+      <iframe
+        key={selectedTrailer.key}
+        src={`https://www.youtube.com/embed/${encodeURIComponent(selectedTrailer.key)}?autoplay=1&rel=0`}
+        title="Movie trailer"
+        allow="autoplay; encrypted-media; picture-in-picture"
+        allowFullScreen
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          border: 0
+        }}
+      />
+    </div>
+  </div>
+)}
             </div>
           </motion.div>
         </motion.div>
