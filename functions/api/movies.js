@@ -1,3 +1,4 @@
+
 const API_BASE = 'https://api.themoviedb.org/3';
 
 export async function onRequestGet({ request, env }) {
@@ -5,7 +6,7 @@ export async function onRequestGet({ request, env }) {
 
   if (!apiKey) {
     return Response.json(
-      { error: '2ff5c3d55268db4ddbe7496493297403' },
+      { error: 'TMDB API key is not configured.' },
       { status: 500 }
     );
   }
@@ -14,47 +15,144 @@ export async function onRequestGet({ request, env }) {
   const type = url.searchParams.get('type') || 'trending';
   const query = url.searchParams.get('query') || '';
   const id = url.searchParams.get('id');
-  const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
+  const page = Math.max(
+    1,
+    Number(url.searchParams.get('page')) || 1
+  );
 
-  let path;
   const params = new URLSearchParams({
     api_key: apiKey,
     language: 'en-US',
     page: String(page)
   });
 
-  if (type === 'search') {
-    if (!query.trim()) {
-      return Response.json({ results: [] });
+  let path;
+
+  switch (type) {
+    // MOVIES
+    case 'trending':
+      path = '/trending/movie/week';
+      break;
+
+    case 'popular':
+      path = '/movie/popular';
+      break;
+
+    case 'genres':
+      path = '/genre/movie/list';
+      break;
+
+    case 'search':
+      if (!query.trim()) {
+        return Response.json({ results: [] });
+      }
+      path = '/search/movie';
+      params.set('query', query.trim());
+      break;
+
+    case 'details':
+      if (!id || !/^\d+$/.test(id)) {
+        return Response.json(
+          { error: 'A valid movie ID is required.' },
+          { status: 400 }
+        );
+      }
+      path = `/movie/${id}`;
+      params.set('append_to_response', 'videos');
+      break;
+
+    // TV SERIES
+    case 'tv':
+    case 'trending-tv':
+      path = '/trending/tv/week';
+      break;
+
+    case 'popular-tv':
+      path = '/tv/popular';
+      break;
+
+    case 'genres-tv':
+      path = '/genre/tv/list';
+      break;
+
+    case 'search-tv':
+      if (!query.trim()) {
+        return Response.json({ results: [] });
+      }
+      path = '/search/tv';
+      params.set('query', query.trim());
+      break;
+
+    case 'details-tv':
+      if (!id || !/^\d+$/.test(id)) {
+        return Response.json(
+          { error: 'A valid TV series ID is required.' },
+          { status: 400 }
+        );
+      }
+      path = `/tv/${id}`;
+      params.set('append_to_response', 'videos,credits,aggregate_credits');
+      break;
+
+    // TV SEASONS AND EPISODES
+    case 'season': {
+      const season = url.searchParams.get('season');
+
+      if (
+        !id ||
+        !/^\d+$/.test(id) ||
+        season === null ||
+        !/^\d+$/.test(season)
+      ) {
+        return Response.json(
+          { error: 'A valid TV ID and season number are required.' },
+          { status: 400 }
+        );
+      }
+
+      path = `/tv/${id}/season/${season}`;
+      break;
     }
-    path = '/search/movie';
-    params.set('query', query.trim());
-  } else if (type === 'popular') {
-    path = '/movie/popular';
-  } else if (type === 'genres') {
-    path = '/genre/movie/list';
-  } else if (type === 'details') {
-    if (!id || !/^\d+$/.test(id)) {
+
+    case 'episode': {
+      const season = url.searchParams.get('season');
+      const episode = url.searchParams.get('episode');
+
+      if (
+        !id ||
+        !/^\d+$/.test(id) ||
+        season === null ||
+        !/^\d+$/.test(season) ||
+        episode === null ||
+        !/^\d+$/.test(episode)
+      ) {
+        return Response.json(
+          { error: 'A valid TV ID, season and episode are required.' },
+          { status: 400 }
+        );
+      }
+
+      path = `/tv/${id}/season/${season}/episode/${episode}`;
+      break;
+    }
+
+    default:
       return Response.json(
-        { error: 'A valid movie ID is required.' },
+        { error: 'Unknown request type.' },
         { status: 400 }
       );
-    }
-    path = `/movie/${id}`;
-    params.set('append_to_response', 'videos');
-  } else {
-    path = '/trending/movie/week';
   }
 
   try {
     const response = await fetch(
       `${API_BASE}${path}?${params.toString()}`
     );
+
     const data = await response.json();
 
     if (!response.ok) {
       return Response.json(
-        { error: 'TMDB request failed.' },
+        { error: data.status_message || 'TMDB request failed.' },
         { status: response.status }
       );
     }
