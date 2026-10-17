@@ -32,16 +32,17 @@ const MEDIA = {
     search: 'search-tv',
     details: 'details-tv'
   },
-  anime: {
-    label: 'Anime',
-    singular: 'Anime',
-    icon: WandSparkles,
-    genres: 'genres-anime',
-    trending: 'trending-anime',
-    popular: 'popular-anime',
-    search: 'search-anime',
-    details: 'details-anime'
-  }
+  
+anime: {
+  label: 'Anime',
+  singular: 'Anime',
+  icon: WandSparkles,
+  genres: 'genres-tv',
+  trending: 'anime-series',
+  popular: 'anime-series',
+  search: 'search-anime-series',
+  details: 'details-tv'
+}
 }
 
 const reveal = {
@@ -260,9 +261,54 @@ export default function App() {
           type = MEDIA[mediaMode].trending
         }
 
+       
         const params = { type, page: String(page) }
 
         if (search.trim()) params.query = search.trim()
+
+        if (mediaMode === 'anime') {
+          const commonParams = { page: String(page) }
+
+          if (search.trim()) {
+            commonParams.query = search.trim()
+          }
+
+          const [seriesData, movieData] = await Promise.all([
+            requestJSON({
+              ...commonParams,
+              type: search.trim() ? 'search-anime-series' : 'anime-series'
+            }, controller.signal),
+
+            requestJSON({
+              ...commonParams,
+              type: search.trim() ? 'search-anime-movies' : 'anime-movies'
+            }, controller.signal)
+          ])
+
+          if (requestId !== requestRef.current) return
+
+          const series = (seriesData.results || []).map(item => ({
+            ...formatMedia(item, genreMap, 'anime'),
+            original: { ...item, _apiMediaType: 'tv' }
+          }))
+
+          const movies = (movieData.results || []).map(item => ({
+            ...formatMedia(item, genreMap, 'anime'),
+            original: { ...item, _apiMediaType: 'movie' }
+          }))
+
+          setItems([...series, ...movies])
+          setTotalPages(
+            Math.min(
+              Math.max(
+                Number(seriesData.total_pages || 1),
+                Number(movieData.total_pages || 1)
+              ),
+              500
+            )
+          )
+          return
+        }
 
         const data = await requestJSON(params, controller.signal)
 
@@ -273,6 +319,7 @@ export default function App() {
         ))
 
         setTotalPages(Math.min(Number(data.total_pages || 1), 500))
+
       } catch (err) {
         if (err.name !== 'AbortError' && requestId === requestRef.current) {
           setError(
@@ -406,7 +453,14 @@ export default function App() {
     setSelectedSeasonNumber(1)
 
     try {
-      const detailType = MEDIA[item.mediaType].details
+     
+const detailType =
+  item.mediaType === 'anime'
+    ? item.original?._apiMediaType === 'tv'
+      ? 'details-tv'
+      : 'details'
+    : MEDIA[item.mediaType].details
+
       const data = await requestJSON({
         type: detailType,
         id: String(item.id)
