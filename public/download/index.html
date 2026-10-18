@@ -1,0 +1,222 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#09090d" />
+  <title>Download CineVerse — Your Next Obsession</title>
+  <meta name="description" content="Download CineVerse for Android. Discover movies, TV series and anime in a cinematic experience." />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #09090d;
+      color: #f8f8fb;
+      font-family: Inter, system-ui, Arial, sans-serif;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 7%;
+      border-bottom: 1px solid #24242c;
+    }
+    .brand {
+      color: white;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-decoration: none;
+    }
+    .brand span { color: #ef233c; }
+    .back {
+      color: #b9b9c6;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    main {
+      width: min(1100px, 90%);
+      margin: auto;
+      min-height: 78vh;
+      display: grid;
+      grid-template-columns: 1fr 0.85fr;
+      align-items: center;
+      gap: 60px;
+      padding: 70px 0;
+    }
+    .eyebrow {
+      color: #ff5266;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    h1 {
+      font-size: clamp(42px, 6vw, 76px);
+      line-height: 1.02;
+      letter-spacing: -3px;
+      margin: 22px 0;
+    }
+    h1 span {
+      color: #ef233c;
+      display: block;
+    }
+    .description {
+      color: #a5a5b3;
+      font-size: 17px;
+      line-height: 1.8;
+      max-width: 480px;
+    }
+    .download {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: #ef233c;
+      color: white;
+      text-decoration: none;
+      font-weight: 800;
+      border-radius: 10px;
+      padding: 17px 24px;
+      margin-top: 22px;
+      box-shadow: 0 10px 35px #ef233c33;
+      transition: transform .2s, background .2s;
+    }
+    .download:hover {
+      background: #ff344d;
+      transform: translateY(-3px);
+    }
+    .note {
+      color: #777785;
+      font-size: 12px;
+      margin-top: 16px;
+    }
+    .poster {
+      min-height: 420px;
+      border: 1px solid #34303b;
+      border-radius: 24px;
+      background:
+        radial-gradient(ellipse at 50% 35%, #9e172e88, transparent 55%),
+        linear-gradient(145deg, #1c1821, #0d0d13 65%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .poster::before, .poster::after {
+      content: "";
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      border: 1px solid #ef233c35;
+      border-radius: 50%;
+    }
+    .poster::after { width: 340px; height: 340px; }
+    .monogram {
+      z-index: 1;
+      font-size: 190px;
+      line-height: 1;
+      font-weight: 950;
+      color: #f32443;
+      text-shadow: 0 0 55px #ef233c77;
+    }
+    .poster-label {
+      position: absolute;
+      bottom: 28px;
+      letter-spacing: 5px;
+      color: #aaa5b2;
+      font-size: 10px;
+    }
+    .features {
+      width: min(1100px, 90%);
+      margin: 0 auto 70px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    .feature {
+      background: #111117;
+      border: 1px solid #24242e;
+      border-radius: 14px;
+      padding: 22px;
+    }
+    .feature strong { display: block; margin-bottom: 8px; }
+    .feature p {
+      color: #9292a2;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 0;
+    }
+    footer {
+      border-top: 1px solid #24242c;
+      padding: 24px;
+      text-align: center;
+      color: #777785;
+      font-size: 12px;
+    }
+    @media (max-width: 700px) {
+      header { padding: 20px 5%; }
+      main {
+        grid-template-columns: 1fr;
+        gap: 36px;
+        padding: 55px 0;
+      }
+      h1 { letter-spacing: -2px; }
+      .poster { min-height: 300px; }
+      .monogram { font-size: 145px; }
+      .features { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/">CINE<span>VERSE</span></a>
+    <a class="back" href="/">← Back to website</a>
+  </header>
+
+  <main>
+    <section>
+      <div class="eyebrow">Your cinematic universe</div>
+      <h1>Your next <span>obsession.</span></h1>
+      <p class="description">
+        Step into CineVerse. Explore movies, TV series and anime
+        through a cinematic interface built for discovery.
+      </p>
+      <a class="download"
+         href="https://pub-129962143fe6440c88381f66bb25cee3.r2.dev/CineVerse-NEW.apk"
+         download>
+        ↓ &nbsp; Download for Android
+      </a>
+      <p class="note">Android APK · 4.3 MB · Download from the official CineVerse site</p>
+    </section>
+
+    <section class="poster" aria-label="CineVerse brand artwork">
+      <div class="monogram">C</div>
+      <div class="poster-label">YOUR NEXT OBSESSION</div>
+    </section>
+  </main>
+
+  <section class="features">
+    <div class="feature">
+      <strong>🎬 Discover</strong>
+      <p>Explore movies and series in one cinematic experience.</p>
+    </div>
+    <div class="feature">
+      <strong>📱 Made for Android</strong>
+      <p>Enjoy the CineVerse app on your Android device.</p>
+    </div>
+    <div class="feature">
+      <strong>✨ Keep Exploring</strong>
+      <p>Discover new titles and find your next favorite story.</p>
+    </div>
+  </section>
+
+  <footer>© <span id="year"></span> CineVerse. All rights reserved.</footer>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
