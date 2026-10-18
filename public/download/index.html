@@ -311,6 +311,30 @@
       *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
     }
   </style>
+<style>
+.telegram-channel-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 14px 0;
+  padding: 12px 20px;
+  border: 1px solid rgba(120, 140, 255, 0.55);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #635bff, #2589d8);
+  color: #fff !important;
+  font-weight: 700;
+  text-decoration: none !important;
+  transition: transform 180ms ease, filter 180ms ease;
+}
+.telegram-channel-link:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.12);
+}
+.telegram-channel-link:focus-visible {
+  outline: 2px solid #9bbcff;
+  outline-offset: 4px;
+}
+</style>
 </head>
 <body>
   <header class="container nav">
@@ -458,5 +482,6 @@
       Movie artwork is displayed for discovery and identification. CineVerse is an independent project and is not affiliated with the studios or franchises shown.
     </div>
   </footer>
+<a class="telegram-channel-link" href="https://t.me/cineverseofficialbd" target="_blank" rel="noopener noreferrer">Join Our Official Telegram Channel</a>
 </body>
 </html>
