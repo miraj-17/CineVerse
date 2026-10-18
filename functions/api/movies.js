@@ -1,13 +1,59 @@
 
 const API_BASE = 'https://api.themoviedb.org/3';
 
+const ALLOWED_ORIGINS = new Set([
+  'https://localhost',
+  'capacitor://localhost',
+  'http://localhost',
+  'https://cineverse-49q.pages.dev'
+]);
+
+function corsHeaders(request) {
+  const origin = request.headers.get('Origin') || '';
+  const headers = new Headers();
+
+  if (ALLOWED_ORIGINS.has(origin)) {
+    headers.set('Access-Control-Allow-Origin', origin);
+    headers.set('Vary', 'Origin');
+  }
+
+  headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  headers.set('Access-Control-Allow-Headers', 'Content-Type');
+  headers.set('Access-Control-Max-Age', '86400');
+
+  return headers;
+}
+
+function jsonResponse(request, data, status = 200, extraHeaders = {}) {
+  const headers = corsHeaders(request);
+
+  headers.set('Content-Type', 'application/json; charset=utf-8');
+
+  for (const [key, value] of Object.entries(extraHeaders)) {
+    headers.set(key, value);
+  }
+
+  return new Response(JSON.stringify(data), {
+    status,
+    headers
+  });
+}
+
+export async function onRequestOptions({ request }) {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders(request)
+  });
+}
+
 export async function onRequestGet({ request, env }) {
   const apiKey = env.TMDB_API_KEY;
 
   if (!apiKey) {
-    return Response.json(
+    return jsonResponse(
+      request,
       { error: 'TMDB API key is not configured.' },
-      { status: 500 }
+      500
     );
   }
 
@@ -26,7 +72,6 @@ export async function onRequestGet({ request, env }) {
   let path;
 
   switch (type) {
-    // MOVIES
     case 'trending':
       path = '/trending/movie/week';
       break;
@@ -41,7 +86,7 @@ export async function onRequestGet({ request, env }) {
 
     case 'search':
       if (!query.trim()) {
-        return Response.json({ results: [] });
+        return jsonResponse(request, { results: [] });
       }
       path = '/search/movie';
       params.set('query', query.trim());
@@ -49,16 +94,16 @@ export async function onRequestGet({ request, env }) {
 
     case 'details':
       if (!id || !/^\d+$/.test(id)) {
-        return Response.json(
+        return jsonResponse(
+          request,
           { error: 'A valid movie ID is required.' },
-          { status: 400 }
+          400
         );
       }
       path = `/movie/${id}`;
       params.set('append_to_response', 'videos,credits');
       break;
 
-    // TV SERIES
     case 'tv':
     case 'trending-tv':
       path = '/trending/tv/week';
@@ -74,7 +119,7 @@ export async function onRequestGet({ request, env }) {
 
     case 'search-tv':
       if (!query.trim()) {
-        return Response.json({ results: [] });
+        return jsonResponse(request, { results: [] });
       }
       path = '/search/tv';
       params.set('query', query.trim());
@@ -82,9 +127,10 @@ export async function onRequestGet({ request, env }) {
 
     case 'details-tv':
       if (!id || !/^\d+$/.test(id)) {
-        return Response.json(
+        return jsonResponse(
+          request,
           { error: 'A valid TV series ID is required.' },
-          { status: 400 }
+          400
         );
       }
       path = `/tv/${id}`;
@@ -94,7 +140,6 @@ export async function onRequestGet({ request, env }) {
       );
       break;
 
-    // ANIME MOVIES
     case 'anime-movies':
       path = '/discover/movie';
       params.set('with_genres', '16');
@@ -105,14 +150,13 @@ export async function onRequestGet({ request, env }) {
 
     case 'search-anime-movies':
       if (!query.trim()) {
-        return Response.json({ results: [] });
+        return jsonResponse(request, { results: [] });
       }
       path = '/search/movie';
       params.set('query', query.trim());
       params.set('include_adult', 'false');
       break;
 
-    // ANIME SERIES
     case 'anime-series':
       path = '/discover/tv';
       params.set('with_genres', '16');
@@ -122,13 +166,12 @@ export async function onRequestGet({ request, env }) {
 
     case 'search-anime-series':
       if (!query.trim()) {
-        return Response.json({ results: [] });
+        return jsonResponse(request, { results: [] });
       }
       path = '/search/tv';
       params.set('query', query.trim());
       break;
 
-    // TV SEASONS
     case 'season': {
       const season = url.searchParams.get('season');
 
@@ -138,9 +181,10 @@ export async function onRequestGet({ request, env }) {
         season === null ||
         !/^\d+$/.test(season)
       ) {
-        return Response.json(
+        return jsonResponse(
+          request,
           { error: 'A valid TV ID and season number are required.' },
-          { status: 400 }
+          400
         );
       }
 
@@ -148,7 +192,6 @@ export async function onRequestGet({ request, env }) {
       break;
     }
 
-    // TV EPISODES
     case 'episode': {
       const season = url.searchParams.get('season');
       const episode = url.searchParams.get('episode');
@@ -161,12 +204,12 @@ export async function onRequestGet({ request, env }) {
         episode === null ||
         !/^\d+$/.test(episode)
       ) {
-        return Response.json(
+        return jsonResponse(
+          request,
           {
-            error:
-              'A valid TV ID, season and episode are required.'
+            error: 'A valid TV ID, season and episode are required.'
           },
-          { status: 400 }
+          400
         );
       }
 
@@ -175,9 +218,10 @@ export async function onRequestGet({ request, env }) {
     }
 
     default:
-      return Response.json(
+      return jsonResponse(
+        request,
         { error: 'Unknown request type.' },
-        { status: 400 }
+        400
       );
   }
 
@@ -189,13 +233,13 @@ export async function onRequestGet({ request, env }) {
     const data = await response.json();
 
     if (!response.ok) {
-      return Response.json(
+      return jsonResponse(
+        request,
         { error: data.status_message || 'TMDB request failed.' },
-        { status: response.status }
+        response.status
       );
     }
 
-    // Filter anime search results to Japanese animation.
     if (
       type === 'search-anime-movies' ||
       type === 'search-anime-series'
@@ -208,15 +252,14 @@ export async function onRequestGet({ request, env }) {
       );
     }
 
-    return Response.json(data, {
-      headers: {
-        'Cache-Control': 'public, max-age=300'
-      }
+    return jsonResponse(request, data, 200, {
+      'Cache-Control': 'public, max-age=300'
     });
   } catch {
-    return Response.json(
+    return jsonResponse(
+      request,
       { error: 'Unable to connect to TMDB.' },
-      { status: 502 }
+      502
     );
   }
 }
