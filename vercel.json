@@ -1,0 +1,8 @@
+﻿{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://cineverse-49q.pages.dev/api/:path*"
+    }
+  ]
+}
