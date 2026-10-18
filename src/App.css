@@ -1492,3 +1492,42 @@ html {
   }
 }
 
+
+/* CineVerse Official Telegram link */
+.footer .telegram-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: fit-content;
+  margin: 12px 0;
+  padding: 10px 16px;
+  border: 1px solid rgba(120, 110, 255, 0.35);
+  border-radius: 999px;
+  color: var(--text-primary, #f5f5ff);
+  background: linear-gradient(
+    135deg,
+    rgba(110, 80, 255, 0.16),
+    rgba(40, 190, 230, 0.10)
+  );
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: border-color 180ms ease, transform 180ms ease,
+    background 180ms ease;
+}
+
+.footer .telegram-link:hover {
+  border-color: rgba(120, 190, 255, 0.8);
+  background: linear-gradient(
+    135deg,
+    rgba(110, 80, 255, 0.28),
+    rgba(40, 190, 230, 0.18)
+  );
+  transform: translateY(-2px);
+}
+
+.footer .telegram-link:focus-visible {
+  outline: 2px solid #8c9cff;
+  outline-offset: 3px;
+}

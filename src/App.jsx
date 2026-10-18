@@ -1247,7 +1247,16 @@ async function loadCatalog() {
           </button>
         </nav>
 
-        <p className="footer-legal">
+                <a
+          className="telegram-link"
+          href="https://t.me/cineverseofficialbd"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Join CineVerse Official Telegram Channel"
+        >
+          Join Our Telegram
+        </a>
+<p className="footer-legal">
           Movie, TV and anime metadata provided by TMDB. CineVerse is not
           endorsed or certified by TMDB.
           <span>Â© {new Date().getFullYear()} CineVerse</span>
