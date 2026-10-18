@@ -1,16 +1,25 @@
+const corsHeaders = {
+  "Content-Type": "application/json",
+  "Cache-Control": "no-store",
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+const json = (data, status = 200) =>
+  new Response(JSON.stringify(data), {
+    status,
+    headers: corsHeaders,
+  });
+
+export async function onRequestOptions() {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders,
+  });
+}
 
 export async function onRequestGet({ request, env }) {
-  const corsHeaders = {
-    "Content-Type": "application/json",
-    "Cache-Control": "no-store",
-  };
-
-  const json = (data, status = 200) =>
-    new Response(JSON.stringify(data), {
-      status,
-      headers: corsHeaders,
-    });
-
   try {
     const apiKey = env.NEXSTREAM_API_KEY;
 
@@ -44,10 +53,7 @@ export async function onRequestGet({ request, env }) {
       return json({ error: "Invalid season or episode." }, 400);
     }
 
-    // Replace this URL/path with the exact endpoint
-    // documented by your NexStream API provider.
     const endpoint = new URL("https://api.codespecters.com");
-
     const isMovie = mediaType === "movie";
 
     endpoint.pathname = isMovie
