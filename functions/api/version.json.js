@@ -1,9 +1,9 @@
-﻿export async function onRequestGet() {
+export async function onRequestGet() {
   const manifest = {
-    versionCode: 2,
-    versionName: "1.1",
+    versionCode: 3,
+    versionName: "1.2",
     apkUrl: "https://pub-129962143fe6440c88381f66bb25cee3.r2.dev/CineVerse-NEW.apk",
-    releaseNotes: "CineVerse update available.",
+    releaseNotes: "CineVerse 1.2: Improvements and updates.",
     mandatory: false
   };
 
