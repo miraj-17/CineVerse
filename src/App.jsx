@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import {
   Search, ArrowUpRight, Play, Info, Clapperboard,
@@ -7,7 +7,7 @@ import {
   Maximize, ExternalLink, Menu
 } from 'lucide-react'
 import './App.css'
-
+import UpdateChecker from './UpdateChecker.jsx'
 /* ------------------------------------------------------------------
    API (unchanged): /api/movies  and  /api/player
 ------------------------------------------------------------------ */
@@ -733,6 +733,7 @@ async function loadCatalog() {
 
   return (
     <div className="app">
+      <UpdateChecker />
       {/* ---------------- Navbar ---------------- */}
       <header className={`navbar ${scrolled || menuOpen ? 'solid' : ''}`}>
         <Logo uid="nav" onClick={() => switchMedia('movie')} />
@@ -810,7 +811,7 @@ async function loadCatalog() {
 
               <div className="hero-content">
                 <span className="hero-kind">
-                  {badgeText(heroItem.mediaType)} · Trending now
+                  {badgeText(heroItem.mediaType)} Â· Trending now
                 </span>
 
                 <h1>{heroItem.title}</h1>
@@ -887,7 +888,7 @@ async function loadCatalog() {
 
               <p>
                 {search.trim()
-                  ? `Results for “${search.trim()}”`
+                  ? `Results for â€œ${search.trim()}â€`
                   : `Find something worth watching in our ${mediaLabel.toLowerCase()} collection.`}
               </p>
             </div>
@@ -1096,7 +1097,7 @@ async function loadCatalog() {
         <p className="footer-legal">
           Movie, TV and anime metadata provided by TMDB. CineVerse is not
           endorsed or certified by TMDB.
-          <span>© {new Date().getFullYear()} CineVerse</span>
+          <span>Â© {new Date().getFullYear()} CineVerse</span>
         </p>
       </footer>
 
@@ -1141,7 +1142,7 @@ async function loadCatalog() {
                   <span className="player-title">
                     {selectedMedia.title || 'Now Playing'}
                     {isEpisodic &&
-                      ` · S${selectedSeasonNumber} E${selectedEpisodeNumber}`}
+                      ` Â· S${selectedSeasonNumber} E${selectedEpisodeNumber}`}
                   </span>
 
                   <div className="player-actions">
@@ -1319,7 +1320,7 @@ async function loadCatalog() {
                                 episode.season_number ?? selectedSeasonNumber
                               ).padStart(2, '0')}
                               {' '}E{String(episode.episode_number).padStart(2, '0')}
-                              {episode.air_date ? ` · ${episode.air_date}` : ''}
+                              {episode.air_date ? ` Â· ${episode.air_date}` : ''}
                             </div>
 
                             <h4>
@@ -1385,3 +1386,4 @@ async function loadCatalog() {
     </div>
   )
 }
+

@@ -1042,3 +1042,48 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
     transition-duration: 0.01ms !important;
   }
 }
+
+/* CineVerse Download App button */
+.download-app-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid rgba(201, 184, 255, 0.35);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #7547ef, #5124c9);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 5px 20px rgba(107, 61, 240, 0.22);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.download-app-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 26px rgba(107, 61, 240, 0.4);
+}
+
+.download-app-link:focus-visible {
+  outline: 2px solid #c9b8ff;
+  outline-offset: 3px;
+}
+
+/* Download button inside navbar */
+.nav-links .download-app-link {
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+/* Mobile navbar download button */
+@media (max-width: 760px) {
+  .nav-links .download-app-link {
+    width: 100%;
+    justify-content: center;
+    margin: 10px 0 4px;
+    padding: 12px 16px;
+  }
+}
