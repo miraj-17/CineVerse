@@ -1,4 +1,4 @@
-export async function onRequestGet() {
+﻿export async function onRequestGet() {
   const manifest = {
     versionCode: 3,
     versionName: "1.2",
@@ -10,7 +10,22 @@ export async function onRequestGet() {
   return new Response(JSON.stringify(manifest), {
     headers: {
       "Content-Type": "application/json; charset=utf-8",
-      "Cache-Control": "no-store"
+      "Cache-Control": "no-store",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type"
+    }
+  });
+}
+
+export async function onRequestOptions() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Max-Age": "86400"
     }
   });
 }
