@@ -6,14 +6,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-  --ink: #09080e;
-  --surface: #12101a;
-  --raised: #1a1724;
+  --ink: #0a0a0b;
+  --surface: #141416;
+  --raised: #1f1f23;
   --line: rgba(255, 255, 255, 0.08);
   --text: #f4f2fa;
-  --muted: #968fa8;
-  --accent: #a78bfa;
-  --accent-strong: #7c4dff;
+  --muted: #9a9aa3;
+  --accent: #ff4d6d;
+  --accent-strong: #e11d48;
   --gold: #f5c76a;
   --gutter: clamp(16px, 4vw, 56px);
   --nav-h: 68px;
@@ -88,7 +88,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   background: var(--raised);
   border-color: var(--line);
 }
-.btn-secondary:hover:not(:disabled) { border-color: rgba(167, 139, 250, 0.5); }
+.btn-secondary:hover:not(:disabled) { border-color: rgba(255, 77, 109, 0.5); }
 
 .btn-glass {
   background: rgba(255, 255, 255, 0.12);
@@ -125,13 +125,13 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   display: flex;
   align-items: center;
   gap: 32px;
-  background: linear-gradient(to bottom, rgba(9, 8, 14, 0.85), rgba(9, 8, 14, 0));
+  background: linear-gradient(to bottom, rgba(10, 10, 11, 0.85), rgba(10, 10, 11, 0));
   border-bottom: 1px solid transparent;
   transition: background 0.25s, border-color 0.25s, backdrop-filter 0.25s;
 }
 
 .navbar.solid {
-  background: rgba(9, 8, 14, 0.88);
+  background: rgba(10, 10, 11, 0.88);
   border-bottom-color: var(--line);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
@@ -174,7 +174,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   border: 0;
   border-radius: 999px;
   background: transparent;
-  color: #bdb7cd;
+  color: #c4c4cc;
   font-size: 13px;
   font-weight: 600;
   transition: color 0.18s, background 0.18s;
@@ -182,7 +182,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
 
 .nav-links button:hover { color: #fff; background: rgba(255, 255, 255, 0.07); }
 
-.nav-links button.active { color: #fff; background: rgba(167, 139, 250, 0.2); }
+.nav-links button.active { color: #fff; background: rgba(255, 77, 109, 0.2); }
 
 .nav-actions { display: flex; align-items: center; gap: 4px; margin-left: auto; }
 
@@ -216,8 +216,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(9, 8, 14, 0.92) 0%, rgba(9, 8, 14, 0.55) 42%, rgba(9, 8, 14, 0) 75%),
-    linear-gradient(0deg, var(--ink) 0%, rgba(9, 8, 14, 0) 38%);
+    linear-gradient(90deg, rgba(10, 10, 11, 0.92) 0%, rgba(10, 10, 11, 0.55) 42%, rgba(10, 10, 11, 0) 75%),
+    linear-gradient(0deg, var(--ink) 0%, rgba(10, 10, 11, 0) 38%);
 }
 
 .hero-content {
@@ -249,7 +249,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 14px;
-  color: #cfc9de;
+  color: #d6d6dc;
   font-size: 13px;
   font-weight: 600;
 }
@@ -261,7 +261,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   max-width: 520px;
   margin: 16px 0 0;
   overflow: hidden;
-  color: #cfc9de;
+  color: #d6d6dc;
   font-size: 15px;
   line-height: 1.65;
   -webkit-box-orient: vertical;
@@ -390,8 +390,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
 }
 
 .search-box:focus-within {
-  border-color: rgba(167, 139, 250, 0.6);
-  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.12);
+  border-color: rgba(255, 77, 109, 0.6);
+  box-shadow: 0 0 0 3px rgba(255, 77, 109, 0.12);
 }
 
 .search-box input {
@@ -405,7 +405,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   font-size: 14px;
 }
 
-.search-box input::placeholder { color: #6f697f; }
+.search-box input::placeholder { color: #74747d; }
 
 .search-box button {
   display: grid;
@@ -435,17 +435,17 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   border: 1px solid var(--line);
   border-radius: 999px;
   background: transparent;
-  color: #bdb7cd;
+  color: #c4c4cc;
   font-size: 13px;
   font-weight: 600;
   transition: color 0.18s, background 0.18s, border-color 0.18s;
 }
 
-.genre-chip:hover { border-color: rgba(167, 139, 250, 0.5); color: #fff; }
+.genre-chip:hover { border-color: rgba(255, 77, 109, 0.5); color: #fff; }
 
 .genre-chip.active {
   border-color: var(--accent);
-  background: rgba(167, 139, 250, 0.18);
+  background: rgba(255, 77, 109, 0.18);
   color: #fff;
 }
 
@@ -475,7 +475,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
 .movie-card:hover .poster-wrap,
 .poster-wrap:focus-visible {
   transform: translateY(-5px);
-  border-color: rgba(167, 139, 250, 0.55);
+  border-color: rgba(255, 77, 109, 0.55);
   box-shadow: 0 18px 36px rgba(0, 0, 0, 0.45);
 }
 
@@ -511,7 +511,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   gap: 4px;
   padding: 5px 8px;
   border-radius: 7px;
-  background: rgba(9, 8, 14, 0.78);
+  background: rgba(10, 10, 11, 0.78);
   color: var(--gold);
   font-size: 11px;
   font-weight: 700;
@@ -523,7 +523,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   inset: 0;
   display: grid;
   place-items: center;
-  background: linear-gradient(0deg, rgba(9, 8, 14, 0.7), rgba(9, 8, 14, 0.15));
+  background: linear-gradient(0deg, rgba(10, 10, 11, 0.7), rgba(10, 10, 11, 0.15));
   opacity: 0;
   transition: opacity 0.2s;
 }
@@ -621,7 +621,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   transition: border-color 0.18s;
 }
 
-.pagination button:hover:not(:disabled) { border-color: rgba(167, 139, 250, 0.5); }
+.pagination button:hover:not(:disabled) { border-color: rgba(255, 77, 109, 0.5); }
 .pagination button:disabled { cursor: not-allowed; opacity: 0.4; }
 
 /* ---------- CTA band + footer ---------- */
@@ -636,7 +636,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   border: 1px solid var(--line);
   border-radius: 20px;
   background:
-    radial-gradient(ellipse at 100% 0%, rgba(124, 77, 255, 0.22), transparent 55%),
+    radial-gradient(ellipse at 100% 0%, rgba(225, 29, 72, 0.22), transparent 55%),
     var(--surface);
 }
 
@@ -654,7 +654,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   gap: 32px;
   padding: 44px var(--gutter);
   border-top: 1px solid var(--line);
-  background: #07060b;
+  background: #060607;
 }
 
 .footer-brand p,
@@ -671,7 +671,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   padding: 4px 0;
   border: 0;
   background: transparent;
-  color: #bdb7cd;
+  color: #c4c4cc;
   font-size: 13px;
   font-weight: 600;
 }
@@ -679,7 +679,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
 .footer-links button:hover { color: #fff; }
 
 .footer-legal { margin-top: 0; }
-.footer-legal span { display: block; margin-top: 10px; color: #6f697f; }
+.footer-legal span { display: block; margin-top: 10px; color: #74747d; }
 
 /* ==========================================
    MODAL + PLAYER
@@ -694,7 +694,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   justify-content: center;
   padding: 24px 16px;
   overflow: hidden;
-  background: rgba(4, 3, 9, 0.88);
+  background: rgba(4, 4, 5, 0.88);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -710,7 +710,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   background: var(--surface);
   box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
   scrollbar-width: thin;
-  scrollbar-color: #342f45 transparent;
+  scrollbar-color: #3a3a40 transparent;
 }
 
 .modal-close {
@@ -724,12 +724,12 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   height: 38px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 50%;
-  background: rgba(9, 8, 14, 0.75);
+  background: rgba(10, 10, 11, 0.75);
   color: #fff;
   transition: background 0.18s;
 }
 
-.modal-close:hover { background: rgba(124, 77, 255, 0.6); }
+.modal-close:hover { background: rgba(225, 29, 72, 0.6); }
 
 .modal-cover {
   position: relative;
@@ -742,7 +742,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
 .modal-cover-fade {
   position: absolute;
   inset: 0;
-  background: linear-gradient(0deg, var(--surface) 0%, rgba(18, 16, 26, 0.2) 55%, rgba(18, 16, 26, 0) 100%);
+  background: linear-gradient(0deg, var(--surface) 0%, rgba(20, 20, 22, 0.2) 55%, rgba(20, 20, 22, 0) 100%);
 }
 
 .kind-pill {
@@ -751,7 +751,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   left: 16px;
   padding: 6px 11px;
   border-radius: 999px;
-  background: rgba(9, 8, 14, 0.75);
+  background: rgba(10, 10, 11, 0.75);
   border: 1px solid rgba(255, 255, 255, 0.16);
   font-size: 12px;
   font-weight: 700;
@@ -791,7 +791,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   gap: 10px 16px;
   padding: 12px 18px;
   border-bottom: 1px solid var(--line);
-  background: #0c0a13;
+  background: #0f0f11;
 }
 
 .player-title {
@@ -828,7 +828,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
 .modal-description {
   max-width: 70ch;
   margin: 16px 0 0;
-  color: #bdb7cd;
+  color: #c4c4cc;
   font-size: 15px;
   line-height: 1.7;
 }
@@ -887,11 +887,11 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   transition: border-color 0.18s, background 0.18s;
 }
 
-.episode-card:hover { border-color: rgba(167, 139, 250, 0.4); }
+.episode-card:hover { border-color: rgba(255, 77, 109, 0.4); }
 
 .episode-card.active {
   border-color: var(--accent);
-  background: rgba(167, 139, 250, 0.1);
+  background: rgba(255, 77, 109, 0.1);
 }
 
 .episode-card > img,
@@ -968,7 +968,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
 
 .modal-disclaimer {
   margin: 28px 0 0;
-  color: #6f697f;
+  color: #74747d;
   font-size: 12px;
 }
 
@@ -996,7 +996,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
     gap: 2px;
     padding: 8px var(--gutter) 16px;
     border-bottom: 1px solid var(--line);
-    background: rgba(9, 8, 14, 0.97);
+    background: rgba(10, 10, 11, 0.97);
     backdrop-filter: blur(18px);
   }
 
@@ -1006,7 +1006,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
   .hero { min-height: 78vh; padding-bottom: 64px; }
   .hero-shade {
     background:
-      linear-gradient(0deg, var(--ink) 4%, rgba(9, 8, 14, 0.7) 48%, rgba(9, 8, 14, 0.25) 100%);
+      linear-gradient(0deg, var(--ink) 4%, rgba(10, 10, 11, 0.7) 48%, rgba(10, 10, 11, 0.25) 100%);
   }
   .hero-content > p { font-size: 14px; }
   .hero-actions .btn-lg { padding: 13px 22px; }
@@ -1087,3 +1087,408 @@ h1, h2, h3, h4 { font-family: var(--font-display); }
     padding: 12px 16px;
   }
 }
+
+
+/* ===== PREMIUM TOUCHES (added by cineverse-premium.mjs) ===== */
+
+.app {
+  isolation: isolate;
+}
+
+.app::before {
+  content: '';
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 520px;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% -10%, rgba(225, 29, 72, 0.14), transparent 62%);
+}
+
+.hero-shade {
+  background:
+    linear-gradient(90deg, rgba(10, 10, 11, 0.94) 0%, rgba(10, 10, 11, 0.5) 42%, rgba(10, 10, 11, 0) 76%),
+    linear-gradient(0deg, var(--ink) 0%, rgba(10, 10, 11, 0) 40%),
+    radial-gradient(ellipse at 100% 0%, rgba(225, 29, 72, 0.12), transparent 50%);
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 10px 30px rgba(225, 29, 72, 0.35);
+}
+
+.movie-card:hover .poster-wrap,
+.poster-wrap:focus-visible {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 77, 109, 0.5);
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #3a3a40 var(--ink);
+}
+
+/* ===== CineVerse My List & Watch History ===== */
+
+.library-panel {
+  margin: 0 0 48px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012));
+}
+
+.library-panel .catalog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.library-panel .catalog-head h2 {
+  margin: 0;
+}
+
+.library-panel .catalog-head p {
+  margin: 8px 0 0;
+  color: var(--muted, #a1a1aa);
+  font-size: 14px;
+}
+
+.library-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.025);
+  transition: border-color 180ms ease, transform 180ms ease;
+}
+
+.library-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 77, 109, 0.4);
+}
+
+.library-card .movie-card {
+  margin: 0;
+}
+
+.library-card-actions {
+  display: flex;
+  padding: 10px 12px 12px;
+}
+
+.library-card-actions .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.library-panel .empty-state {
+  padding: 44px 20px;
+  text-align: center;
+}
+
+.library-panel .empty-state > svg {
+  color: #ff4d6d;
+  margin-bottom: 12px;
+}
+
+.library-panel .empty-state h3 {
+  margin: 0 0 8px;
+}
+
+.library-panel .empty-state p {
+  margin: 0 0 20px;
+  color: var(--muted, #a1a1aa);
+}
+
+@media (max-width: 760px) {
+  .library-panel {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .library-panel .catalog-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .library-card-actions {
+    padding: 8px;
+  }
+
+  .library-card-actions .btn {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .library-card {
+    transition: none;
+  }
+
+  .library-card:hover {
+    transform: none;
+  }
+}
+
+/* ===== CineVerse Premium Library Upgrade ===== */
+
+.library-panel {
+  position: relative;
+  isolation: isolate;
+  margin-top: 12px;
+  padding: clamp(18px, 3vw, 32px);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 26px;
+  background:
+    radial-gradient(ellipse at 5% 0%, rgba(255, 77, 109, 0.10), transparent 42%),
+    linear-gradient(145deg, #17171d 0%, #101014 65%, #151116 100%);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+}
+
+.library-panel::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -100px;
+  right: -90px;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: rgba(255, 77, 109, 0.07);
+  filter: blur(65px);
+  pointer-events: none;
+}
+
+.library-panel .catalog-head {
+  position: relative;
+  align-items: center;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.library-panel .catalog-head h2 {
+  font-size: clamp(25px, 3vw, 34px);
+  font-weight: 800;
+  letter-spacing: -1.1px;
+}
+
+.library-panel .catalog-head p {
+  color: #a6a6b3;
+  line-height: 1.6;
+}
+
+.library-panel .movie-grid {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 26px 18px;
+}
+
+.library-card {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 17px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.library-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(255, 77, 109, 0.45);
+  box-shadow: 0 16px 35px rgba(0, 0, 0, 0.28);
+}
+
+.library-card .movie-card {
+  background: transparent;
+}
+
+.library-card-actions {
+  padding: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.library-card-actions .btn {
+  min-height: 38px;
+  border-radius: 10px;
+  font-size: 12px;
+  transition: background 180ms ease, border-color 180ms ease;
+}
+
+.library-card-actions .btn:hover {
+  border-color: rgba(255, 77, 109, 0.4);
+}
+
+.library-panel .empty-state {
+  min-height: 230px;
+  justify-content: center;
+  border: 1px dashed rgba(255, 255, 255, 0.13);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.library-panel .empty-state > svg {
+  filter: drop-shadow(0 0 12px rgba(255, 77, 109, 0.25));
+}
+
+@media (min-width: 1200px) {
+  .library-panel .movie-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 28px 20px;
+  }
+}
+
+@media (max-width: 760px) {
+  .library-panel {
+    padding: 16px;
+    border-radius: 19px;
+  }
+
+  .library-panel .catalog-head {
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+  }
+
+  .library-panel .movie-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 12px;
+  }
+
+  .library-card {
+    border-radius: 13px;
+  }
+
+  .library-card-actions {
+    padding: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .library-card,
+  .library-card-actions .btn {
+    transition: none;
+  }
+
+  .library-card:hover {
+    transform: none;
+  }
+}
+
+/* ===== CineVerse Library: Mobile Polish ===== */
+
+.library-panel,
+.library-panel * {
+  min-width: 0;
+}
+
+.library-panel .catalog-head > div {
+  min-width: 0;
+}
+
+.library-panel .catalog-head h2 {
+  overflow-wrap: anywhere;
+}
+
+.library-panel .catalog-head > button {
+  flex-shrink: 0;
+}
+
+.library-panel .movie-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.library-card .movie-card {
+  width: 100%;
+  min-width: 0;
+}
+
+.library-card-actions .btn {
+  min-height: 40px;
+  padding: 9px 8px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .library-panel .movie-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 22px 14px;
+  }
+}
+
+@media (max-width: 600px) {
+  .library-panel {
+    margin-top: 8px;
+    padding: 14px 11px;
+    border-radius: 17px;
+  }
+
+  .library-panel .catalog-head {
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding-bottom: 16px;
+  }
+
+  .library-panel .catalog-head h2 {
+    font-size: 25px;
+    letter-spacing: -0.6px;
+  }
+
+  .library-panel .catalog-head p {
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+
+  .library-panel .catalog-head > button {
+    align-self: flex-start;
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  .library-panel .movie-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 10px;
+  }
+
+  .library-card {
+    border-radius: 12px;
+  }
+
+  .library-card-actions {
+    padding: 7px;
+  }
+
+  .library-card-actions .btn {
+    min-height: 38px;
+    gap: 5px;
+    padding: 8px 5px;
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  .library-panel .empty-state {
+    padding: 32px 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .library-panel .movie-grid {
+    gap: 14px 8px;
+  }
+
+  .library-panel .catalog-head h2 {
+    font-size: 22px;
+  }
+
+  .library-card-actions .btn {
+    font-size: 10px;
+  }
+}
+

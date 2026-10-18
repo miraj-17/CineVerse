@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { App as CapApp } from '@capacitor/app'
 import { Capacitor } from '@capacitor/core'
 
@@ -25,6 +25,11 @@ export default function UpdateChecker() {
         if (!active) return
 
         const installedCode = Number(appInfo.build)
+        console.log('CineVerse update diagnostic:', {
+          platform: Capacitor.getPlatform(),
+          appInfo,
+          installedCode,
+        })
         setCurrentVersion(appInfo.version || '')
 
         const response = await fetch(
@@ -48,6 +53,7 @@ export default function UpdateChecker() {
         }
       } catch (error) {
         console.warn('CineVerse update check unavailable:', error)
+        alert(`CineVerse update check failed: ${String(error)}`)
       } finally {
         if (active) setChecking(false)
       }

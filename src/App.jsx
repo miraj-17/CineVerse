@@ -4,10 +4,11 @@ import {
   Search, ArrowUpRight, Play, Info, Clapperboard,
   Star, X, ChevronLeft, ChevronRight, Film, Compass,
   Tv, CalendarDays, Layers, LoaderCircle, WandSparkles,
-  Maximize, ExternalLink, Menu
+  Maximize, ExternalLink, Menu, Bookmark, History, Clock, Trash2
 } from 'lucide-react'
 import './App.css'
 import UpdateChecker from './UpdateChecker.jsx'
+import { getWatchLibrary, addToHistory, removeFromHistory, clearHistory, addToMyList, removeFromMyList, isInMyList } from './WatchLibrary.jsx'
 /* ------------------------------------------------------------------
    API (unchanged): /api/movies  and  /api/player
 ------------------------------------------------------------------ */
@@ -93,7 +94,7 @@ function formatMedia(item, genreMap = {}, mediaType = 'movie') {
    Logo
 ------------------------------------------------------------------ */
 function LogoMark({ size = 36, uid = 'nav' }) {
-  const gradId = `cv-grad-${uid}`
+  const gradId = `cv-premium-${uid}`;
 
   return (
     <svg
@@ -102,39 +103,34 @@ function LogoMark({ size = 36, uid = 'nav' }) {
       height={size}
       viewBox="0 0 40 40"
       aria-hidden="true"
+      fill="none"
     >
       <defs>
-        <linearGradient
-          id={gradId}
-          x1="4"
-          y1="2"
-          x2="36"
-          y2="38"
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop offset="0" stopColor="#c9b8ff" />
-          <stop offset="1" stopColor="#6b3df0" />
+        <linearGradient id={gradId} x1="5" y1="4" x2="35" y2="36">
+          <stop offset="0%" stopColor="#ff526f" />
+          <stop offset="100%" stopColor="#a50025" />
         </linearGradient>
       </defs>
-      <rect width="40" height="40" rx="11" fill={`url(#${gradId})`} />
+
       <path
-        d="M15 11.5 L29 20 L15 28.5 Z"
-        fill="#fff"
-        stroke="#fff"
-        strokeWidth="2.4"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M8 31.5 C14 36.5 27 36.5 33 29"
-        fill="none"
-        stroke="#fff"
-        strokeOpacity="0.55"
-        strokeWidth="1.8"
+        d="M29 10.5 A14 14 0 1 0 29 29.5"
+        stroke={`url(#${gradId})`}
+        strokeWidth="5.5"
         strokeLinecap="round"
       />
+
+      <path
+        d="M17 13.5 L29 20 L17 26.5 Z"
+        fill="#ffffff"
+        stroke="#ffffff"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
     </svg>
-  )
+  );
 }
+
+
 
 function Logo({ onClick, uid }) {
   return (
@@ -235,6 +231,8 @@ export default function App() {
   const [mediaMode, setMediaMode] = useState('movie')
   const [search, setSearch] = useState('')
   const [selectedGenre, setSelectedGenre] = useState('All')
+  const [watchLibrary, setWatchLibrary] = useState(() => getWatchLibrary())
+  const [libraryView, setLibraryView] = useState('catalog')
   const [selectedMedia, setSelectedMedia] = useState(null)
   const [selectedEpisodeNumber, setSelectedEpisodeNumber] = useState(1)
 
@@ -275,6 +273,33 @@ export default function App() {
   const isEpisodic = isTV || isAnime
   const mediaLabel = MEDIA[mediaMode].label
 
+  function refreshWatchLibrary() {
+    setWatchLibrary(getWatchLibrary())
+  }
+
+  function toggleMyList(item) {
+    if (!item) return
+
+    if (isInMyList(item)) {
+      removeFromMyList(item)
+    } else {
+      addToMyList(item)
+    }
+
+    refreshWatchLibrary()
+  }
+
+  function openLibraryItem(item) {
+    if (!item) return
+    setLibraryView('catalog')
+    openMedia(item)
+  }
+
+  function saveWatchHistory(item, episodeInfo = {}) {
+    if (!item) return
+    addToHistory(item, episodeInfo)
+    refreshWatchLibrary()
+  }
   async function requestJSON(params, signal) {
     const query = new URLSearchParams(params)
     const response = await fetch(`${API_URL}?${query}`, { signal })
@@ -613,6 +638,10 @@ async function loadCatalog() {
       }
 
       setPlayerUrl(data.playerUrl)
+      saveWatchHistory(selectedMedia, {
+        season: selectedMedia.mediaType === 'movie' ? null : season,
+        episode: selectedMedia.mediaType === 'movie' ? null : episode,
+      })
       modalRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (err) {
       setPlayerError(err.message || 'Player load failed')
@@ -763,6 +792,32 @@ async function loadCatalog() {
           </button>
 
 
+          <button
+            type="button"
+            className={libraryView === 'myList' ? 'active' : ''}
+            onClick={() => {
+              setLibraryView('myList')
+              setMenuOpen(false)
+              refreshWatchLibrary()
+              document.getElementById('trending')?.scrollIntoView({ behavior: 'smooth' })
+            }}
+          >
+            <Bookmark size={15} /> My List
+          </button>
+
+          <button
+            type="button"
+            className={libraryView === 'history' ? 'active' : ''}
+            onClick={() => {
+              setLibraryView('history')
+              setMenuOpen(false)
+              refreshWatchLibrary()
+              document.getElementById('trending')?.scrollIntoView({ behavior: 'smooth' })
+            }}
+          >
+            <History size={15} /> History
+          </button>
+
           <a
             href="/download/index.html"
             className="download-app-link"
@@ -874,6 +929,8 @@ async function loadCatalog() {
           )
         )}
 
+        {true && (
+        <>
         {/* ---------------- Catalog ---------------- */}
         <section className="catalog" id="trending">
           <div className="catalog-head">
@@ -941,6 +998,100 @@ async function loadCatalog() {
               </button>
             )}
           </label>
+
+          {libraryView !== 'catalog' && (
+            <div className="library-panel">
+              <div className="catalog-head">
+                <div>
+                  <h2>
+                    {libraryView === 'myList' ? 'My List' : 'Watch History'}
+                  </h2>
+                  <p>
+                    {libraryView === 'myList'
+                      ? `${watchLibrary.myList.length} saved titles`
+                      : `${watchLibrary.history.length} recently played titles`}
+                  </p>
+                </div>
+
+                {libraryView !== 'catalog' && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => setLibraryView('catalog')}
+                  >
+                    <ArrowUpRight size={15} /> Back to Browse
+                  </button>
+                )}
+
+                {libraryView === 'history' && watchLibrary.history.length > 0 && (
+                  <button
+                    type="button"
+                    className="btn btn-glass btn-sm"
+                    onClick={() => {
+                      clearHistory()
+                      refreshWatchLibrary()
+                    }}
+                  >
+                    <Trash2 size={15} /> Clear history
+                  </button>
+                )}
+              </div>
+
+              <div className="movie-grid">
+                {(libraryView === 'myList'
+                  ? watchLibrary.myList
+                  : watchLibrary.history
+                ).map(item => (
+                  <div className="library-card" key={`${item.mediaType}-${item.id}-${item.season || 0}-${item.episode || 0}`}>
+                    <MediaCard item={item} onSelect={openLibraryItem} />
+                    <div className="library-card-actions">
+                      <button
+                        type="button"
+                        className="btn btn-glass btn-sm"
+                        onClick={() => {
+                          if (libraryView === 'myList') {
+                            removeFromMyList(item)
+                          } else {
+                            removeFromHistory(item)
+                          }
+                          refreshWatchLibrary()
+                        }}
+                      >
+                        <Trash2 size={14} />
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {(libraryView === 'myList'
+                ? watchLibrary.myList
+                : watchLibrary.history
+              ).length === 0 && (
+                <div className="empty-state">
+                  {libraryView === 'myList'
+                    ? <Bookmark size={30} />
+                    : <Clock size={30} />}
+                  <h3>
+                    {libraryView === 'myList' ? 'Your list is empty' : 'No watch history yet'}
+                  </h3>
+                  <p>
+                    {libraryView === 'myList'
+                      ? 'Save movies and series to find them here later.'
+                      : 'Start playing a movie or episode and it will appear here.'}
+                  </p>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => setLibraryView('catalog')}
+                  >
+                    Browse titles
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="genre-filters" id="categories">
             <button
@@ -1049,6 +1200,8 @@ async function loadCatalog() {
             </>
           )}
         </section>
+        </>
+        )}
 
         <section className="cta-band">
           <div>
@@ -1157,16 +1310,6 @@ async function loadCatalog() {
                     <button
                       type="button"
                       className="btn btn-glass btn-sm"
-                      onClick={() =>
-                        window.open(playerUrl, '_blank', 'noopener,noreferrer')
-                      }
-                    >
-                      <ExternalLink size={15} /> Open separately
-                    </button>
-
-                    <button
-                      type="button"
-                      className="btn btn-glass btn-sm"
                       onClick={() => setPlayerUrl('')}
                     >
                       <X size={15} /> Close player
@@ -1180,7 +1323,7 @@ async function loadCatalog() {
                 style={{
                   backgroundImage: selectedMedia.backdrop
                     ? `url("${posterUrl(selectedMedia.backdrop, 'w1280')}")`
-                    : 'linear-gradient(135deg, #392e63, #151522)'
+                    : 'linear-gradient(135deg, #3a1420, #141416)'
                 }}
               >
                 <div className="modal-cover-fade" />
@@ -1199,14 +1342,14 @@ async function loadCatalog() {
                 </span>
                 <span><CalendarDays size={14} /> {selectedMedia.year}</span>
 
-                {selectedMedia.genres.map(genre => (
+                {(selectedMedia.genres || []).map(genre => (
                   <span key={genre}>{genre}</span>
                 ))}
 
-                {isEpisodic && selectedMedia.original.number_of_seasons && (
+                {isEpisodic && selectedMedia.original?.number_of_seasons && (
                   <span>
                     <Layers size={14} />
-                    {selectedMedia.original.number_of_seasons} seasons
+                    {selectedMedia.original?.number_of_seasons} seasons
                   </span>
                 )}
               </div>
@@ -1237,10 +1380,19 @@ async function loadCatalog() {
                   <Clapperboard size={17} /> Trailer
                 </button>
 
-                {selectedMedia.original.homepage && (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => toggleMyList(selectedMedia)}
+                >
+                  <Bookmark size={17} />
+                  {isInMyList(selectedMedia) ? 'Remove from My List' : 'Add to My List'}
+                </button>
+
+                {selectedMedia.original?.homepage && (
                   <a
                     className="btn btn-secondary"
-                    href={selectedMedia.original.homepage}
+                    href={selectedMedia.original?.homepage}
                     target="_blank"
                     rel="noreferrer"
                   >
@@ -1386,4 +1538,18 @@ async function loadCatalog() {
     </div>
   )
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
