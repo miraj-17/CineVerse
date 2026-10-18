@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import {
   Search, ArrowUpRight, Play, Info, Clapperboard,
@@ -12,8 +12,8 @@ import { getWatchLibrary, addToHistory, removeFromHistory, clearHistory, addToMy
 /* ------------------------------------------------------------------
    API (unchanged): /api/movies  and  /api/player
 ------------------------------------------------------------------ */
-const API_URL = 'https://cineverse-49q.pages.dev/api/movies'
-const PLAYER_API_URL = 'https://cineverse-49q.pages.dev/api/player'
+const API_URL = '/api/movies'
+const PLAYER_API_URL = '/api/player'
 const IMAGE_BASE = 'https://image.tmdb.org/t/p/'
 
 const MEDIA = {
