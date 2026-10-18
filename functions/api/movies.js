@@ -5,6 +5,8 @@ const ALLOWED_ORIGINS = new Set([
   'https://localhost',
   'capacitor://localhost',
   'http://localhost',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
   'https://cineverse-49q.pages.dev'
 ]);
 
