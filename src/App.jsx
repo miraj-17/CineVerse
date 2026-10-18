@@ -1,13 +1,16 @@
-
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import {
-  Search, ArrowUpRight, Play, Sparkles, Clapperboard,
+  Search, ArrowUpRight, Play, Info, Clapperboard,
   Star, X, ChevronLeft, ChevronRight, Film, Compass,
-  Tv, CalendarDays, Layers, LoaderCircle, WandSparkles
+  Tv, CalendarDays, Layers, LoaderCircle, WandSparkles,
+  Maximize, ExternalLink, Menu
 } from 'lucide-react'
 import './App.css'
 
+/* ------------------------------------------------------------------
+   API (unchanged): /api/movies  and  /api/player
+------------------------------------------------------------------ */
 const API_URL = '/api/movies'
 const IMAGE_BASE = 'https://image.tmdb.org/t/p/'
 
@@ -32,27 +35,32 @@ const MEDIA = {
     search: 'search-tv',
     details: 'details-tv'
   },
-  
-anime: {
-  label: 'Anime',
-  singular: 'Anime',
-  icon: WandSparkles,
-  genres: 'genres-tv',
-  trending: 'anime-series',
-  popular: 'anime-series',
-  search: 'search-anime-series',
-  details: 'details-tv'
-}
+  anime: {
+    label: 'Anime',
+    singular: 'Anime',
+    icon: WandSparkles,
+    genres: 'genres-tv',
+    trending: 'anime-series',
+    popular: 'anime-series',
+    search: 'search-anime-series',
+    details: 'details-tv'
+  }
 }
 
 const reveal = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 14 },
   visible: { opacity: 1, y: 0 }
 }
 
 function posterUrl(path, size = 'w500') {
   if (!path) return ''
   return `${IMAGE_BASE}${size}${path.startsWith('/') ? path : `/${path}`}`
+}
+
+function badgeText(mediaType) {
+  if (mediaType === 'tv') return 'TV Series'
+  if (mediaType === 'anime') return 'Anime'
+  return 'Movie'
 }
 
 function formatMedia(item, genreMap = {}, mediaType = 'movie') {
@@ -80,7 +88,73 @@ function formatMedia(item, genreMap = {}, mediaType = 'movie') {
   }
 }
 
-function Reveal({ children, className = '', delay = 0 }) {
+/* ------------------------------------------------------------------
+   Logo
+------------------------------------------------------------------ */
+function LogoMark({ size = 36, uid = 'nav' }) {
+  const gradId = `cv-grad-${uid}`
+
+  return (
+    <svg
+      className="logo-svg"
+      width={size}
+      height={size}
+      viewBox="0 0 40 40"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient
+          id={gradId}
+          x1="4"
+          y1="2"
+          x2="36"
+          y2="38"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0" stopColor="#c9b8ff" />
+          <stop offset="1" stopColor="#6b3df0" />
+        </linearGradient>
+      </defs>
+      <rect width="40" height="40" rx="11" fill={`url(#${gradId})`} />
+      <path
+        d="M15 11.5 L29 20 L15 28.5 Z"
+        fill="#fff"
+        stroke="#fff"
+        strokeWidth="2.4"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 31.5 C14 36.5 27 36.5 33 29"
+        fill="none"
+        stroke="#fff"
+        strokeOpacity="0.55"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
+function Logo({ onClick, uid }) {
+  return (
+    <button
+      className="logo"
+      onClick={onClick}
+      type="button"
+      aria-label="CineVerse home"
+    >
+      <LogoMark uid={uid} />
+      <span className="logo-word">
+        Cine<strong>Verse</strong>
+      </span>
+    </button>
+  )
+}
+
+/* ------------------------------------------------------------------
+   Poster card
+------------------------------------------------------------------ */
+function Reveal({ children, className = '' }) {
   const reducedMotion = useReducedMotion()
 
   return (
@@ -90,7 +164,7 @@ function Reveal({ children, className = '', delay = 0 }) {
       initial={reducedMotion ? false : 'hidden'}
       whileInView="visible"
       viewport={{ once: true, amount: 0.08 }}
-      transition={{ duration: reducedMotion ? 0 : 0.45, delay }}
+      transition={{ duration: reducedMotion ? 0 : 0.35 }}
     >
       {children}
     </motion.div>
@@ -118,26 +192,20 @@ function MediaCard({ item, onSelect }) {
           />
         ) : (
           <div className="poster-fallback">
-            <Icon size={42} />
+            <Icon size={38} />
             <span>{item.title}</span>
           </div>
         )}
 
-        <span className="media-type-badge">
-          {item.mediaType === 'tv'
-            ? 'TV SERIES'
-            : item.mediaType === 'anime'
-              ? 'ANIME'
-              : 'MOVIE'}
-        </span>
-
         <span className="rating">
-          <Star size={13} fill="currentColor" />
+          <Star size={12} fill="currentColor" />
           {item.rating}
         </span>
 
         <span className="poster-open">
-          <Play size={18} fill="currentColor" />
+          <span className="poster-play">
+            <Play size={20} fill="currentColor" />
+          </span>
         </span>
       </button>
 
@@ -159,13 +227,24 @@ function MediaCard({ item, onSelect }) {
   )
 }
 
+/* ------------------------------------------------------------------
+   App
+------------------------------------------------------------------ */
 export default function App() {
   const [mediaMode, setMediaMode] = useState('movie')
   const [search, setSearch] = useState('')
   const [selectedGenre, setSelectedGenre] = useState('All')
   const [selectedMedia, setSelectedMedia] = useState(null)
+  const [selectedEpisodeNumber, setSelectedEpisodeNumber] = useState(1)
+
+  const [playerUrl, setPlayerUrl] = useState('')
+  const [playerLoading, setPlayerLoading] = useState(false)
+  const [playerError, setPlayerError] = useState('')
+
   const [trailerOpen, setTrailerOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const [heroIndex, setHeroIndex] = useState(0)
 
   const [items, setItems] = useState([])
   const [genres, setGenres] = useState([])
@@ -185,6 +264,10 @@ export default function App() {
   const requestRef = useRef(0)
   const genreRequestRef = useRef(0)
   const detailsRequestRef = useRef(0)
+  const playerWrapRef = useRef(null)
+  const modalRef = useRef(null)
+  const searchRef = useRef(null)
+  const autoPlayRef = useRef(false)
 
   const isTV = mediaMode === 'tv'
   const isAnime = mediaMode === 'anime'
@@ -261,7 +344,6 @@ export default function App() {
           type = MEDIA[mediaMode].trending
         }
 
-       
         const params = { type, page: String(page) }
 
         if (search.trim()) params.query = search.trim()
@@ -319,7 +401,6 @@ export default function App() {
         ))
 
         setTotalPages(Math.min(Number(data.total_pages || 1), 500))
-
       } catch (err) {
         if (err.name !== 'AbortError' && requestId === requestRef.current) {
           setError(
@@ -383,9 +464,13 @@ export default function App() {
     return () => controller.abort()
   }, [selectedMedia, selectedSeasonNumber])
 
+  // Escape closes the modal (browser handles Escape first in fullscreen).
   useEffect(() => {
     const handleKeyDown = event => {
       if (event.key === 'Escape') {
+        autoPlayRef.current = false
+        setPlayerUrl('')
+        setPlayerError('')
         setSelectedMedia(null)
         setTrailerOpen(false)
         setMenuOpen(false)
@@ -403,6 +488,23 @@ export default function App() {
     }
   }, [selectedMedia])
 
+  // Navbar turns solid after the page is scrolled a little.
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  // "Play" on the hero: open the title, then start the player once the
+  // details have loaded.
+  useEffect(() => {
+    if (autoPlayRef.current && selectedMedia && !detailsLoading) {
+      autoPlayRef.current = false
+      playSelectedMedia()
+    }
+  }, [selectedMedia, detailsLoading])
+
   const filteredItems = useMemo(() => {
     if (selectedGenre === 'All') return items
 
@@ -411,16 +513,28 @@ export default function App() {
     )
   }, [items, selectedGenre])
 
+  const heroCandidates = useMemo(
+    () => items.filter(item => item.backdrop).slice(0, 5),
+    [items]
+  )
+
+  const heroItem = heroCandidates[heroIndex] || heroCandidates[0] || null
+
   const trailer = useMemo(() => {
     const videos = selectedMedia?.original?.videos?.results || []
 
-    return videos.find(video =>
-      video.site === 'YouTube' &&
-      video.type === 'Trailer' &&
-      video.official
-    ) || videos.find(video =>
-      video.site === 'YouTube' &&
-      ['Trailer', 'Teaser'].includes(video.type)
+    return (
+      videos.find(
+        video =>
+          video.site === 'YouTube' &&
+          video.type === 'Trailer' &&
+          video.official
+      ) ||
+      videos.find(
+        video =>
+          video.site === 'YouTube' &&
+          ['Trailer', 'Teaser'].includes(video.type)
+      )
     )
   }, [selectedMedia])
 
@@ -433,19 +547,83 @@ export default function App() {
   }
 
   function switchMedia(type) {
+    autoPlayRef.current = false
     setMediaMode(type)
     setCatalogType('trending')
     setPage(1)
     setSearch('')
     setSelectedGenre('All')
+    setHeroIndex(0)
     setMenuOpen(false)
+    setPlayerUrl('')
+    setPlayerError('')
     setSelectedMedia(null)
     setTrailerOpen(false)
+  }
+
+  function focusSearch() {
+    setMenuOpen(false)
+    document.getElementById('trending')?.scrollIntoView({ behavior: 'smooth' })
+    setTimeout(() => searchRef.current?.focus({ preventScroll: true }), 450)
+  }
+
+  async function playSelectedMedia(override = {}) {
+    if (!selectedMedia) return
+
+    const season = override.season ?? selectedSeasonNumber
+    const episode = override.episode ?? selectedEpisodeNumber
+
+    setPlayerLoading(true)
+    setPlayerError('')
+    setPlayerUrl('')
+
+    try {
+      const params = new URLSearchParams({
+        mediaType: selectedMedia.mediaType,
+        id: String(selectedMedia.id),
+        season: String(season),
+        episode: String(episode),
+      })
+
+      const response = await fetch(`/api/player?${params}`)
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Player load failed')
+      }
+
+      if (!data.playerUrl) {
+        throw new Error('Player URL was not returned by the server')
+      }
+
+      setPlayerUrl(data.playerUrl)
+      modalRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch (err) {
+      setPlayerError(err.message || 'Player load failed')
+    } finally {
+      setPlayerLoading(false)
+    }
+  }
+
+  function goFullscreen() {
+    const el = playerWrapRef.current
+    if (!el) return
+
+    const request = el.requestFullscreen || el.webkitRequestFullscreen
+
+    if (request) {
+      request.call(el)
+    } else if (playerUrl) {
+      window.open(playerUrl, '_blank', 'noopener,noreferrer')
+    }
   }
 
   async function openMedia(item) {
     const requestId = ++detailsRequestRef.current
 
+    setPlayerUrl('')
+    setPlayerError('')
+    setSelectedEpisodeNumber(1)
     setSelectedMedia({ ...item })
     setDetailsLoading(true)
     setTrailerOpen(false)
@@ -453,13 +631,12 @@ export default function App() {
     setSelectedSeasonNumber(1)
 
     try {
-     
-const detailType =
-  item.mediaType === 'anime'
-    ? item.original?._apiMediaType === 'tv'
-      ? 'details-tv'
-      : 'details'
-    : MEDIA[item.mediaType].details
+      const detailType =
+        item.mediaType === 'anime'
+          ? item.original?._apiMediaType === 'tv'
+            ? 'details-tv'
+            : 'details'
+          : MEDIA[item.mediaType].details
 
       const data = await requestJSON({
         type: detailType,
@@ -499,8 +676,18 @@ const detailType =
     }
   }
 
+  function playFromHero(item) {
+    autoPlayRef.current = true
+    openMedia(item)
+  }
+
   function closeMedia() {
     ++detailsRequestRef.current
+    autoPlayRef.current = false
+
+    setPlayerUrl('')
+    setPlayerError('')
+    setSelectedEpisodeNumber(1)
     setSelectedMedia(null)
     setTrailerOpen(false)
     setSeasonDetails(null)
@@ -525,24 +712,14 @@ const detailType =
   const availableSeasons = (selectedMedia?.original?.seasons || [])
     .filter(season => season.season_number > 0)
 
-  const MediaIcon = MEDIA[mediaMode].icon
+  const showHero =
+    !search.trim() && !error && page === 1 && (Boolean(heroItem) || loading)
 
   return (
     <div className="app">
-      <div className="ambient-glow" aria-hidden="true" />
-
-      <header className="navbar">
-        <button
-          className="logo"
-          onClick={() => switchMedia('movie')}
-          type="button"
-          aria-label="CineVerse home"
-        >
-          <span className="logo-mark">
-            <Clapperboard size={21} />
-          </span>
-          <span>CINE<span className="logo-accent">VERSE</span></span>
-        </button>
+      {/* ---------------- Navbar ---------------- */}
+      <header className={`navbar ${scrolled || menuOpen ? 'solid' : ''}`}>
+        <Logo uid="nav" onClick={() => switchMedia('movie')} />
 
         <nav className={`nav-links ${menuOpen ? 'open' : ''}`}>
           {Object.entries(MEDIA).map(([key, media]) => {
@@ -551,6 +728,7 @@ const detailType =
             return (
               <button
                 key={key}
+                type="button"
                 className={mediaMode === key && catalogType === 'trending' ? 'active' : ''}
                 onClick={() => switchMedia(key)}
               >
@@ -560,104 +738,118 @@ const detailType =
           })}
 
           <button
+            type="button"
             className={catalogType === 'popular' ? 'active' : ''}
             onClick={() => changeCatalog('popular')}
           >
             <Star size={15} /> Popular
           </button>
-
-          <a href="#categories" onClick={() => setMenuOpen(false)}>
-            <Compass size={15} /> Discover
-          </a>
         </nav>
 
-        <button
-          className="menu-toggle"
-          onClick={() => setMenuOpen(open => !open)}
-          aria-label="Toggle navigation"
-          type="button"
-        >
-          {menuOpen ? <X size={21} /> : <span>☰</span>}
-        </button>
+        <div className="nav-actions">
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={focusSearch}
+            aria-label="Search titles"
+          >
+            <Search size={19} />
+          </button>
+
+          <button
+            type="button"
+            className="icon-btn menu-toggle"
+            onClick={() => setMenuOpen(open => !open)}
+            aria-label="Toggle navigation"
+            aria-expanded={menuOpen}
+          >
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
       </header>
 
-      <main>
-        <section className="hero">
-          <div className="hero-content">
-            <div className="eyebrow">
-              <Sparkles size={15} /> YOUR NEXT OBSESSION
-            </div>
+      <main className={showHero ? '' : 'no-hero'}>
+        {/* ---------------- Billboard hero ---------------- */}
+        {showHero && (
+          heroItem ? (
+            <section className="hero" aria-label="Featured title">
+              <img
+                key={`${heroItem.mediaType}-${heroItem.id}`}
+                className="hero-bg"
+                src={posterUrl(heroItem.backdrop, 'w1280')}
+                alt=""
+              />
+              <div className="hero-shade" />
 
-            <h1>
-              Stories that
-              <br />
-              <span>stay with you.</span>
-            </h1>
+              <div className="hero-content">
+                <span className="hero-kind">
+                  {badgeText(heroItem.mediaType)} · Trending now
+                </span>
 
-            <p>
-              Discover extraordinary movies, unforgettable series and
-              incredible anime worlds. Find your next favorite story.
-            </p>
+                <h1>{heroItem.title}</h1>
 
-            <div className="hero-actions">
-              <button
-                className="btn btn-primary"
-                onClick={() => document.getElementById('trending')?.scrollIntoView({ behavior: 'smooth' })}
-              >
-                <Play size={17} fill="currentColor" /> Explore {mediaLabel}
-              </button>
+                <div className="hero-meta">
+                  <span className="meta-rating">
+                    <Star size={14} fill="currentColor" /> {heroItem.rating}
+                  </span>
+                  <span>{heroItem.year}</span>
+                  <span>{heroItem.genre}</span>
+                </div>
 
-              <button
-                className="btn btn-secondary"
-                onClick={() => switchMedia(
-                  mediaMode === 'movie' ? 'anime'
-                    : mediaMode === 'anime' ? 'tv' : 'movie'
-                )}
-              >
-                {mediaMode === 'movie'
-                  ? <WandSparkles size={17} />
-                  : mediaMode === 'anime'
-                    ? <Tv size={17} />
-                    : <Film size={17} />}
-                {mediaMode === 'movie'
-                  ? 'Explore Anime'
-                  : mediaMode === 'anime'
-                    ? 'Explore TV Series'
-                    : 'Explore Movies'}
-                <ArrowUpRight size={16} />
-              </button>
-            </div>
+                <p>{heroItem.description}</p>
 
-            <div className="hero-note">
-              <span className="hero-dot" />
-              Movies · Series · Anime
-            </div>
-          </div>
+                <div className="hero-actions">
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-lg"
+                    onClick={() => playFromHero(heroItem)}
+                  >
+                    <Play size={19} fill="currentColor" /> Play
+                  </button>
 
-          <div className="hero-art" aria-hidden="true">
-            <div className="hero-orbit orbit-one" />
-            <div className="hero-orbit orbit-two" />
-            <div className="hero-poster">
-              <MediaIcon size={76} />
-            </div>
-            <span className="hero-star star-one">✦</span>
-            <span className="hero-star star-two">✧</span>
-          </div>
-        </section>
-
-        <section className="stats-strip">
-          <div><strong>Movies</strong><span>Blockbuster discoveries</span></div>
-          <div><strong>TV Series</strong><span>Stories across seasons</span></div>
-          <div><strong>Anime</strong><span>Worlds beyond imagination</span></div>
-        </section>
-
-        <section className="movie-section" id="trending">
-          <div className="section-heading">
-            <div>
-              <div className="eyebrow">
-                <Sparkles size={14} /> THE COLLECTION
+                  <button
+                    type="button"
+                    className="btn btn-glass btn-lg"
+                    onClick={() => openMedia(heroItem)}
+                  >
+                    <Info size={19} /> More info
+                  </button>
+                </div>
               </div>
 
+              {heroCandidates.length > 1 && (
+                <div className="hero-picker" role="tablist" aria-label="Featured titles">
+                  {heroCandidates.map((candidate, index) => (
+                    <button
+                      key={`${candidate.mediaType}-${candidate.id}`}
+                      type="button"
+                      role="tab"
+                      aria-selected={candidate === heroItem}
+                      aria-label={candidate.title}
+                      className={candidate === heroItem ? 'active' : ''}
+                      onClick={() => setHeroIndex(index)}
+                    >
+                      <img
+                        src={posterUrl(candidate.backdrop, 'w300')}
+                        alt=""
+                        loading="lazy"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </section>
+          ) : (
+            <section className="hero hero-skeleton" aria-hidden="true">
+              <LoaderCircle className="loading-icon" size={30} />
+            </section>
+          )
+        )}
+
+        {/* ---------------- Catalog ---------------- */}
+        <section className="catalog" id="trending">
+          <div className="catalog-head">
+            <div>
               <h2>
                 {search.trim()
                   ? `Search ${mediaLabel}`
@@ -673,13 +865,16 @@ const detailType =
               </p>
             </div>
 
-            <div className="catalog-switch">
+            <div className="segmented" role="tablist" aria-label="Category">
               {Object.entries(MEDIA).map(([key, media]) => {
                 const Icon = media.icon
 
                 return (
                   <button
                     key={key}
+                    type="button"
+                    role="tab"
+                    aria-selected={mediaMode === key}
                     className={mediaMode === key ? 'active' : ''}
                     onClick={() => switchMedia(key)}
                   >
@@ -690,47 +885,48 @@ const detailType =
             </div>
           </div>
 
-          <div className="search-panel">
-            <label className="search-box">
-              <Search size={19} />
+          <label className="search-box">
+            <Search size={19} />
 
-              <input
-                type="search"
-                value={search}
-                onChange={event => {
-                  setSearch(event.target.value)
+            <input
+              ref={searchRef}
+              type="search"
+              value={search}
+              onChange={event => {
+                setSearch(event.target.value)
+                setPage(1)
+              }}
+              placeholder={`Search ${mediaLabel.toLowerCase()}...`}
+              aria-label={`Search ${mediaLabel}`}
+            />
+
+            {search && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch('')
                   setPage(1)
                 }}
-                placeholder={`Search ${mediaLabel.toLowerCase()}...`}
-                aria-label={`Search ${mediaLabel}`}
-              />
-
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearch('')
-                    setPage(1)
-                  }}
-                  aria-label="Clear search"
-                >
-                  <X size={17} />
-                </button>
-              )}
-            </label>
-          </div>
+                aria-label="Clear search"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </label>
 
           <div className="genre-filters" id="categories">
             <button
+              type="button"
               className={`genre-chip ${selectedGenre === 'All' ? 'active' : ''}`}
               onClick={() => setSelectedGenre('All')}
             >
-              All {mediaLabel}
+              All
             </button>
 
             {genres.map(genre => (
               <button
                 key={genre.id}
+                type="button"
                 className={`genre-chip ${selectedGenre === genre.name ? 'active' : ''}`}
                 onClick={() => setSelectedGenre(genre.name)}
               >
@@ -743,6 +939,7 @@ const detailType =
             <div className="empty-state">
               <p>{error}</p>
               <button
+                type="button"
                 className="btn btn-primary"
                 onClick={() => {
                   setPage(current => current)
@@ -757,8 +954,8 @@ const detailType =
 
           {loading && (
             <div className="loading-state">
-              <LoaderCircle className="loading-icon" size={32} />
-              <p>Discovering {mediaLabel.toLowerCase()}...</p>
+              <LoaderCircle className="loading-icon" size={30} />
+              <p>Loading {mediaLabel.toLowerCase()}...</p>
             </div>
           )}
 
@@ -776,10 +973,11 @@ const detailType =
 
               {filteredItems.length === 0 && (
                 <div className="empty-state">
-                  <Compass size={32} />
+                  <Compass size={30} />
                   <h3>No titles found</h3>
                   <p>Try another search or select a different genre.</p>
                   <button
+                    type="button"
                     className="btn btn-secondary"
                     onClick={() => {
                       setSearch('')
@@ -794,6 +992,7 @@ const detailType =
               {!search.trim() && totalPages > 1 && (
                 <div className="pagination">
                   <button
+                    type="button"
                     disabled={page <= 1}
                     onClick={() => {
                       setPage(current => Math.max(1, current - 1))
@@ -807,6 +1006,7 @@ const detailType =
                   <span>Page {page} of {totalPages}</span>
 
                   <button
+                    type="button"
                     disabled={page >= totalPages}
                     onClick={() => {
                       setPage(current => Math.min(totalPages, current + 1))
@@ -820,28 +1020,23 @@ const detailType =
               )}
             </>
           )}
-
-          <p className="tmdb-note">
-            Movie, TV and anime metadata provided by TMDB.
-            CineVerse is not endorsed or certified by TMDB.
-          </p>
         </section>
 
-        <section className="discovery-banner">
+        <section className="cta-band">
           <div>
-            <div className="eyebrow">
-              <Sparkles size={14} /> KEEP EXPLORING
-            </div>
             <h2>Every story starts somewhere.</h2>
-            <p>Explore movies, TV series and anime in one place.</p>
+            <p>Movies, TV series and anime, all in one place.</p>
           </div>
 
           <button
+            type="button"
             className="btn btn-primary"
-            onClick={() => switchMedia(
-              mediaMode === 'movie' ? 'anime'
-                : mediaMode === 'anime' ? 'tv' : 'movie'
-            )}
+            onClick={() =>
+              switchMedia(
+                mediaMode === 'movie' ? 'anime'
+                  : mediaMode === 'anime' ? 'tv' : 'movie'
+              )
+            }
           >
             {mediaMode === 'movie'
               ? 'Explore Anime'
@@ -853,20 +1048,32 @@ const detailType =
         </section>
       </main>
 
+      {/* ---------------- Footer ---------------- */}
       <footer className="footer">
-        <button
-          className="logo footer-logo"
-          onClick={() => switchMedia('movie')}
-          type="button"
-        >
-          <span className="logo-mark"><Clapperboard size={19} /></span>
-          <span>CINE<span className="logo-accent">VERSE</span></span>
-        </button>
+        <div className="footer-brand">
+          <Logo uid="foot" onClick={() => switchMedia('movie')} />
+          <p>Discover responsibly. Watch through authorized sources.</p>
+        </div>
 
-        <p>Discover responsibly. Watch through authorized sources.</p>
-        <span>© {new Date().getFullYear()} CineVerse</span>
+        <nav className="footer-links" aria-label="Footer">
+          {Object.entries(MEDIA).map(([key, media]) => (
+            <button key={key} type="button" onClick={() => switchMedia(key)}>
+              {media.label}
+            </button>
+          ))}
+          <button type="button" onClick={() => changeCatalog('popular')}>
+            Popular
+          </button>
+        </nav>
+
+        <p className="footer-legal">
+          Movie, TV and anime metadata provided by TMDB. CineVerse is not
+          endorsed or certified by TMDB.
+          <span>© {new Date().getFullYear()} CineVerse</span>
+        </p>
       </footer>
 
+      {/* ---------------- Details + player modal ---------------- */}
       {selectedMedia && (
         <div
           className="movie-modal"
@@ -877,54 +1084,92 @@ const detailType =
         >
           <div
             className="modal-content"
+            ref={modalRef}
             role="dialog"
             aria-modal="true"
             aria-label={`${selectedMedia.title} details`}
           >
             <button
+              type="button"
               className="modal-close"
               onClick={closeMedia}
               aria-label="Close details"
             >
-              <X size={22} />
+              <X size={20} />
             </button>
 
-            <div
-              className="modal-backdrop"
-              style={{
-                backgroundImage: selectedMedia.backdrop
-                  ? `linear-gradient(0deg, #101019 0%, #10101935 100%), url("${posterUrl(selectedMedia.backdrop, 'w1280')}")`
-                  : 'linear-gradient(135deg, #392e63, #151522)'
-              }}
-            >
-              <span className="media-type-badge">
-                {selectedMedia.mediaType === 'tv'
-                  ? 'TV SERIES'
-                  : selectedMedia.mediaType === 'anime'
-                    ? 'ANIME'
-                    : 'MOVIE'}
-              </span>
-            </div>
+            {playerUrl ? (
+              <section className="player-section">
+                <div className="player-frame" ref={playerWrapRef}>
+                  <iframe
+                    src={playerUrl}
+                    title={`${selectedMedia.title || 'Movie'} player`}
+                    allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+                    allowFullScreen
+                    referrerPolicy="strict-origin-when-cross-origin"
+                  />
+                </div>
+
+                <div className="player-bar">
+                  <span className="player-title">
+                    {selectedMedia.title || 'Now Playing'}
+                    {isEpisodic &&
+                      ` · S${selectedSeasonNumber} E${selectedEpisodeNumber}`}
+                  </span>
+
+                  <div className="player-actions">
+                    <button
+                      type="button"
+                      className="btn btn-glass btn-sm"
+                      onClick={goFullscreen}
+                    >
+                      <Maximize size={15} /> Fullscreen
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn btn-glass btn-sm"
+                      onClick={() =>
+                        window.open(playerUrl, '_blank', 'noopener,noreferrer')
+                      }
+                    >
+                      <ExternalLink size={15} /> Open separately
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn btn-glass btn-sm"
+                      onClick={() => setPlayerUrl('')}
+                    >
+                      <X size={15} /> Close player
+                    </button>
+                  </div>
+                </div>
+              </section>
+            ) : (
+              <div
+                className="modal-cover"
+                style={{
+                  backgroundImage: selectedMedia.backdrop
+                    ? `url("${posterUrl(selectedMedia.backdrop, 'w1280')}")`
+                    : 'linear-gradient(135deg, #392e63, #151522)'
+                }}
+              >
+                <div className="modal-cover-fade" />
+                <span className="kind-pill">
+                  {badgeText(selectedMedia.mediaType)}
+                </span>
+              </div>
+            )}
 
             <div className="modal-details">
-              <div className="eyebrow">
-                {selectedMedia.mediaType === 'anime'
-                  ? <WandSparkles size={15} />
-                  : selectedMedia.mediaType === 'tv'
-                    ? <Tv size={15} />
-                    : <Film size={15} />}
-                {selectedMedia.mediaType === 'anime'
-                  ? 'ANIME DETAILS'
-                  : selectedMedia.mediaType === 'tv'
-                    ? 'SERIES DETAILS'
-                    : 'MOVIE DETAILS'}
-              </div>
-
               <h2>{selectedMedia.title}</h2>
 
               <div className="modal-meta">
-                <span><Star size={15} fill="currentColor" /> {selectedMedia.rating}</span>
-                <span><CalendarDays size={15} /> {selectedMedia.year}</span>
+                <span className="meta-rating">
+                  <Star size={14} fill="currentColor" /> {selectedMedia.rating}
+                </span>
+                <span><CalendarDays size={14} /> {selectedMedia.year}</span>
 
                 {selectedMedia.genres.map(genre => (
                   <span key={genre}>{genre}</span>
@@ -932,7 +1177,7 @@ const detailType =
 
                 {isEpisodic && selectedMedia.original.number_of_seasons && (
                   <span>
-                    <Layers size={15} />
+                    <Layers size={14} />
                     {selectedMedia.original.number_of_seasons} seasons
                   </span>
                 )}
@@ -950,8 +1195,18 @@ const detailType =
               )}
 
               <div className="modal-actions">
-                <button className="btn btn-primary" onClick={openTrailer}>
-                  <Play size={17} fill="currentColor" /> Watch Trailer
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => playSelectedMedia()}
+                  disabled={playerLoading}
+                >
+                  <Play size={17} fill="currentColor" />
+                  {playerLoading ? 'Loading player...' : 'Watch now'}
+                </button>
+
+                <button type="button" className="btn btn-secondary" onClick={openTrailer}>
+                  <Clapperboard size={17} /> Trailer
                 </button>
 
                 {selectedMedia.original.homepage && (
@@ -961,15 +1216,21 @@ const detailType =
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Official Website <ArrowUpRight size={16} />
+                    Official website <ArrowUpRight size={16} />
                   </a>
                 )}
               </div>
 
+              {playerError && (
+                <p className="player-error" role="alert">
+                  {playerError}
+                </p>
+              )}
+
               {isEpisodic && availableSeasons.length > 0 && (
                 <section className="seasons-section">
                   <div className="season-heading">
-                    <h3><Layers size={18} /> Seasons & Episodes</h3>
+                    <h3>Episodes</h3>
                     <span>{availableSeasons.length} seasons</span>
                   </div>
 
@@ -1002,7 +1263,17 @@ const detailType =
                   {!seasonLoading && seasonDetails && (
                     <div className="episode-list">
                       {(seasonDetails.episodes || []).map(episode => (
-                        <article className="episode-card" key={episode.id}>
+                        <article
+                          className={`episode-card ${selectedEpisodeNumber === episode.episode_number ? 'active' : ''}`}
+                          key={episode.id}
+                          onClick={() => {
+                            setSelectedEpisodeNumber(episode.episode_number)
+                            playSelectedMedia({
+                              season: selectedSeasonNumber,
+                              episode: episode.episode_number,
+                            })
+                          }}
+                        >
                           {episode.still_path ? (
                             <img
                               src={posterUrl(episode.still_path, 'w300')}
@@ -1043,7 +1314,9 @@ const detailType =
                       ))}
 
                       {(seasonDetails.episodes || []).length === 0 && (
-                        <p>No episode information is available for this season.</p>
+                        <p className="muted-note">
+                          No episode information is available for this season.
+                        </p>
                       )}
                     </div>
                   )}
@@ -1055,10 +1328,11 @@ const detailType =
                   <div className="trailer-heading">
                     <h3>Official trailer</h3>
                     <button
+                      type="button"
                       onClick={() => setTrailerOpen(false)}
                       aria-label="Close trailer"
                     >
-                      <X size={19} />
+                      <X size={18} />
                     </button>
                   </div>
 
@@ -1075,9 +1349,7 @@ const detailType =
               )}
 
               <p className="modal-disclaimer">
-                CineVerse provides discovery information and trailers.
-                Episode details are informational and do not provide
-                full-episode streaming.
+                Metadata and images provided by TMDB.
               </p>
             </div>
           </div>
