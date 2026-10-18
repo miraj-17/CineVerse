@@ -11,7 +11,8 @@ import './App.css'
 /* ------------------------------------------------------------------
    API (unchanged): /api/movies  and  /api/player
 ------------------------------------------------------------------ */
-const API_URL = '/api/movies'
+const API_URL = 'https://cineverse-49q.pages.dev/api/movies'
+const PLAYER_API_URL = 'https://cineverse-49q.pages.dev/api/player'
 const IMAGE_BASE = 'https://image.tmdb.org/t/p/'
 
 const MEDIA = {
@@ -329,91 +330,106 @@ export default function App() {
     const requestId = ++requestRef.current
     let timer
 
-    async function loadCatalog() {
-      setLoading(true)
-      setError('')
+    
+async function loadCatalog() {
+  setLoading(true)
+  setError('')
 
-      try {
-        let type
+  try {
+    let type
 
-        if (search.trim()) {
-          type = MEDIA[mediaMode].search
-        } else if (catalogType === 'popular') {
-          type = MEDIA[mediaMode].popular
-        } else {
-          type = MEDIA[mediaMode].trending
-        }
-
-        const params = { type, page: String(page) }
-
-        if (search.trim()) params.query = search.trim()
-
-        if (mediaMode === 'anime') {
-          const commonParams = { page: String(page) }
-
-          if (search.trim()) {
-            commonParams.query = search.trim()
-          }
-
-          const [seriesData, movieData] = await Promise.all([
-            requestJSON({
-              ...commonParams,
-              type: search.trim() ? 'search-anime-series' : 'anime-series'
-            }, controller.signal),
-
-            requestJSON({
-              ...commonParams,
-              type: search.trim() ? 'search-anime-movies' : 'anime-movies'
-            }, controller.signal)
-          ])
-
-          if (requestId !== requestRef.current) return
-
-          const series = (seriesData.results || []).map(item => ({
-            ...formatMedia(item, genreMap, 'anime'),
-            original: { ...item, _apiMediaType: 'tv' }
-          }))
-
-          const movies = (movieData.results || []).map(item => ({
-            ...formatMedia(item, genreMap, 'anime'),
-            original: { ...item, _apiMediaType: 'movie' }
-          }))
-
-          setItems([...series, ...movies])
-          setTotalPages(
-            Math.min(
-              Math.max(
-                Number(seriesData.total_pages || 1),
-                Number(movieData.total_pages || 1)
-              ),
-              500
-            )
-          )
-          return
-        }
-
-        const data = await requestJSON(params, controller.signal)
-
-        if (requestId !== requestRef.current) return
-
-        setItems((data.results || []).map(item =>
-          formatMedia(item, genreMap, mediaMode)
-        ))
-
-        setTotalPages(Math.min(Number(data.total_pages || 1), 500))
-      } catch (err) {
-        if (err.name !== 'AbortError' && requestId === requestRef.current) {
-          setError(
-            mediaMode === 'anime'
-              ? 'Could not load anime. Check your Anime API routes and connection.'
-              : 'Could not load titles. Check your connection and try again.'
-          )
-          setItems([])
-        }
-      } finally {
-        if (requestId === requestRef.current) setLoading(false)
-      }
+    if (search.trim()) {
+      type = MEDIA[mediaMode].search
+    } else if (catalogType === 'popular') {
+      type = MEDIA[mediaMode].popular
+    } else {
+      type = MEDIA[mediaMode].trending
     }
+
+    const params = { type, page: String(page) }
+
+    if (search.trim()) {
+      params.query = search.trim()
+    }
+
+    if (mediaMode === 'anime') {
+      const commonParams = { page: String(page) }
+
+      if (search.trim()) {
+        commonParams.query = search.trim()
+      }
+
+      const [seriesData, movieData] = await Promise.all([
+        requestJSON({
+          ...commonParams,
+          type: search.trim() ? 'search-anime-series' : 'anime-series'
+        }, controller.signal),
+
+        requestJSON({
+          ...commonParams,
+          type: search.trim() ? 'search-anime-movies' : 'anime-movies'
+        }, controller.signal)
+      ])
+
+      if (requestId !== requestRef.current) return
+
+      const series = (seriesData.results || []).map(item => ({
+        ...formatMedia(item, genreMap, 'anime'),
+        original: { ...item, _apiMediaType: 'tv' }
+      }))
+
+      const movies = (movieData.results || []).map(item => ({
+        ...formatMedia(item, genreMap, 'anime'),
+        original: { ...item, _apiMediaType: 'movie' }
+      }))
+
+      setItems([...series, ...movies])
+
+      setTotalPages(
+        Math.min(
+          Math.max(
+            Number(seriesData.total_pages || 1),
+            Number(movieData.total_pages || 1)
+          ),
+          500
+        )
+      )
+
+      return
+    }
+
+    const data = await requestJSON(params, controller.signal)
+
+    if (requestId !== requestRef.current) return
+
+    setItems(
+      (data.results || []).map(item =>
+        formatMedia(item, genreMap, mediaMode)
+      )
+    )
+
+    setTotalPages(
+      Math.min(Number(data.total_pages || 1), 500)
+    )
+  } catch (err) {
+    if (err.name !== 'AbortError' && requestId === requestRef.current) {
+      console.error('Could not load titles:', err)
+
+      setError(
+        mediaMode === 'anime'
+          ? 'Could not load anime. Check your Anime API routes and connection.'
+          : 'Could not load titles. Check your connection and try again.'
+      )
+
+      setItems([])
+    }
+  } finally {
+    if (requestId === requestRef.current) {
+      setLoading(false)
+    }
+  }
+}
+
 
     timer = setTimeout(loadCatalog, search.trim() ? 350 : 0)
 
@@ -585,7 +601,7 @@ export default function App() {
         episode: String(episode),
       })
 
-      const response = await fetch(`/api/player?${params}`)
+      const response = await fetch(`${PLAYER_API_URL}?${params}`)
       const data = await response.json()
 
       if (!response.ok) {
@@ -744,6 +760,17 @@ export default function App() {
           >
             <Star size={15} /> Popular
           </button>
+
+
+          <a
+            href="/download/index.html"
+            className="download-app-link"
+          >
+            <ArrowUpRight size={15} />
+            Download App
+          </a>
+
+
         </nav>
 
         <div className="nav-actions">
